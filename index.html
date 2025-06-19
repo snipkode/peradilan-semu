@@ -16,10 +16,35 @@
             background-color: #f0f2f5;
         }
         .container {
-            max-width: 90%; /* Adjust as needed for larger screens */
+            /* Adjusted max-width for better responsiveness across screen sizes */
+            max-width: 95%; /* More fluid on small screens */
+            width: 100%; /* Ensure it takes full width initially */
             margin: 0 auto;
-            padding: 1.5rem; /* Reduced padding */
+            padding: 1rem; /* Slightly reduced padding on small screens */
         }
+        @media (min-width: 640px) { /* sm breakpoint */
+            .container {
+                max-width: 90%;
+                padding: 1.5rem;
+            }
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .container {
+                max-width: 80%;
+                padding: 2rem;
+            }
+        }
+        @media (min-width: 1024px) { /* lg breakpoint */
+            .container {
+                max-width: 70%;
+            }
+        }
+        @media (min-width: 1280px) { /* xl breakpoint */
+            .container {
+                max-width: 60%;
+            }
+        }
+
         .chat-bubble {
             max-width: 80%;
             border-radius: 0.75rem; /* rounded-xl */
@@ -94,103 +119,91 @@
         .role-radio-group input[type="radio"] {
             margin-right: 0.5rem;
         }
-
-        /* Responsive adjustments */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 70%;
-            }
-        }
-        @media (min-width: 1024px) {
-            .container {
-                max-width: 60%;
-            }
-        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-    <div class="container bg-white p-6 rounded-xl shadow-lg flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-6">
+    <div class="container bg-white p-4 sm:p-6 rounded-xl shadow-lg flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
         <!-- Auth Section -->
         <div id="auth-section" class="w-full flex flex-col space-y-6">
-            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Masuk / Daftar</h2>
-                <p id="auth-message" class="text-center text-red-500 mb-4 hidden"></p>
+            <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Masuk / Daftar</h2>
+                <p id="auth-message" class="text-center text-red-500 mb-4 hidden text-sm sm:text-base"></p>
                 
                 <div id="login-form">
-                    <label for="login-email" class="block text-md font-medium text-gray-700 mb-2">Email:</label>
-                    <input type="email" id="login-email" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="email@example.com">
+                    <label for="login-email" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Email:</label>
+                    <input type="email" id="login-email" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="email@example.com">
                     
-                    <label for="login-password" class="block text-md font-medium text-gray-700 mt-4 mb-2">Kata Sandi:</label>
-                    <input type="password" id="login-password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="********">
+                    <label for="login-password" class="block text-sm sm:text-md font-medium text-gray-700 mt-4 mb-2">Kata Sandi:</label>
+                    <input type="password" id="login-password" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="********">
                     
-                    <button id="login-submit-button" class="mt-6 w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                    <button id="login-submit-button" class="mt-4 sm:mt-6 w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
                         Masuk
                     </button>
-                    <p class="text-center text-gray-600 mt-4">Belum punya akun? <a href="#" id="show-register" class="text-blue-600 hover:underline">Daftar di sini</a></p>
+                    <p class="text-center text-gray-600 mt-3 sm:mt-4 text-xs sm:text-sm">Belum punya akun? <a href="#" id="show-register" class="text-blue-600 hover:underline">Daftar di sini</a></p>
                 </div>
 
                 <div id="register-form" class="hidden">
-                    <label for="register-email" class="block text-md font-medium text-gray-700 mb-2">Email:</label>
-                    <input type="email" id="register-email" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="email@example.com">
+                    <label for="register-email" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Email:</label>
+                    <input type="email" id="register-email" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="email@example.com">
                     
-                    <label for="register-password" class="block text-md font-medium text-gray-700 mt-4 mb-2">Kata Sandi:</label>
-                    <input type="password" id="register-password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Minimal 6 karakter">
+                    <label for="register-password" class="block text-sm sm:text-md font-medium text-gray-700 mt-4 mb-2">Kata Sandi:</label>
+                    <input type="password" id="register-password" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Minimal 6 karakter">
                     
-                    <label for="register-confirm-password" class="block text-md font-medium text-gray-700 mt-4 mb-2">Konfirmasi Kata Sandi:</label>
-                    <input type="password" id="register-confirm-password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Ulangi kata sandi">
+                    <label for="register-confirm-password" class="block text-sm sm:text-md font-medium text-gray-700 mt-4 mb-2">Konfirmasi Kata Sandi:</label>
+                    <input type="password" id="register-confirm-password" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Ulangi kata sandi">
 
-                    <label class="block text-md font-medium text-gray-700 mt-4 mb-2">Pilih Peran Default Anda:</label>
+                    <label class="block text-sm sm:text-md font-medium text-gray-700 mt-4 mb-2">Pilih Peran Default Anda:</label>
                     <div class="role-radio-group flex flex-col space-y-2">
                         <label>
                             <input type="radio" name="register-role" value="Penggugat" class="form-radio text-blue-600" checked>
-                            <span>Penggugat</span>
+                            <span class="text-sm sm:text-base">Penggugat</span>
                         </label>
                         <label>
                             <input type="radio" name="register-role" value="Tergugat" class="form-radio text-blue-600">
-                            <span>Tergugat</span>
+                            <span class="text-sm sm:text-base">Tergugat</span>
                         </label>
                         <label>
                             <input type="radio" name="register-role" value="Saksi" class="form-radio text-blue-600">
-                            <span>Saksi</span>
+                            <span class="text-sm sm:text-base">Saksi</span>
                         </label>
                         <label>
                             <input type="radio" name="register-role" value="Panitera" class="form-radio text-blue-600">
-                            <span>Panitera</span>
+                            <span class="text-sm sm:text-base">Panitera</span>
                         </label>
                         <label>
                             <input type="radio" name="register-role" value="Hakim" class="form-radio text-blue-600">
-                            <span>Hakim</span>
+                            <span class="text-sm sm:text-base">Hakim</span>
                         </label>
                     </div>
                     
-                    <button id="register-submit-button" class="mt-6 w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                    <button id="register-submit-button" class="mt-4 sm:mt-6 w-full bg-green-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
                         Daftar
                     </button>
-                    <p class="text-center text-gray-600 mt-4">Sudah punya akun? <a href="#" id="show-login" class="text-blue-600 hover:underline">Masuk di sini</a></p>
+                    <p class="text-center text-gray-600 mt-3 sm:mt-4 text-xs sm:text-sm">Sudah punya akun? <a href="#" id="show-login" class="text-blue-600 hover:underline">Masuk di sini</a></p>
                 </div>
             </div>
         </div>
 
         <!-- Room Selection Section (Hidden by default) -->
         <div id="room-selection-section" class="w-full flex-col space-y-6 hidden">
-            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Pilih Sidang</h2>
-                <p id="user-info-room-select" class="text-center text-gray-700 mb-4">Memuat...</p>
+            <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Pilih Sidang</h2>
+                <p id="user-info-room-select" class="text-center text-gray-700 mb-4 text-sm sm:text-base">Memuat...</p>
                 
-                <button id="create-room-button" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                <button id="create-room-button" class="w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
                     Buat Sidang Baru (Anda akan menjadi Penggugat)
                 </button>
 
-                <div class="mt-6 text-center text-gray-700">Atau</div>
+                <div class="mt-4 sm:mt-6 text-center text-gray-700 text-sm sm:text-base">Atau</div>
 
-                <div class="mt-6">
-                    <label for="join-room-id" class="block text-md font-medium text-gray-700 mb-2">ID Sidang:</label>
-                    <input type="text" id="join-room-id" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Masukkan ID sidang yang ada">
-                    <button id="join-room-button" class="mt-4 w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                <div class="mt-4 sm:mt-6">
+                    <label for="join-room-id" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">ID Sidang:</label>
+                    <input type="text" id="join-room-id" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Masukkan ID sidang yang ada">
+                    <button id="join-room-button" class="mt-4 w-full bg-green-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
                         Gabung Sidang
                     </button>
                 </div>
-                <button id="logout-button-room-select" class="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
+                <button id="logout-button-room-select" class="mt-4 sm:mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 shadow-md text-sm sm:text-base">
                     Keluar
                 </button>
             </div>
@@ -198,14 +211,14 @@
 
         <!-- Scenario Setup Section (Hidden by default - part of create room flow) -->
         <div id="create-scenario-section" class="w-full flex-col space-y-6 hidden">
-            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Atur Skenario Sidang Baru</h2>
-                <p class="text-gray-700 leading-relaxed mb-4">
+            <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Atur Skenario Sidang Baru</h2>
+                <p class="text-gray-700 leading-relaxed mb-4 text-sm sm:text-base">
                     Masukkan skenario kasus perdata untuk sidang baru ini. ID sidang akan dibuat otomatis.
                 </p>
-                <label for="new-scenario-input" class="block text-md font-medium text-gray-700 mb-2">Skenario Perkara:</label>
-                <textarea id="new-scenario-input" rows="8" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y" placeholder="Contoh: Sebuah sengketa perdata antara Bapak Budi (Penggugat) dan Ibu Siti (Tergugat) mengenai wanprestasi perjanjian sewa-menyewa rumah. Bapak Budi mengklaim Ibu Siti belum membayar sewa selama 3 bulan, sementara Ibu Siti menyatakan rumah tersebut tidak layak huni dan Bapak Budi tidak pernah melakukan perbaikan."></textarea>
-                <button id="submit-new-scenario-button" class="mt-6 w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                <label for="new-scenario-input" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Skenario Perkara:</label>
+                <textarea id="new-scenario-input" rows="8" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y" placeholder="Contoh: Sebuah sengketa perdata antara Bapak Budi (Penggugat) dan Ibu Siti (Tergugat) mengenai wanprestasi perjanjian sewa-menyewa rumah. Bapak Budi mengklaim Ibu Siti belum membayar sewa selama 3 bulan, sementara Ibu Siti menyatakan rumah tersebut tidak layak huni dan Bapak Budi tidak pernah melakukan perbaikan."></textarea>
+                <button id="submit-new-scenario-button" class="mt-4 sm:mt-6 w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
                     Buat Sidang
                 </button>
             </div>
@@ -213,50 +226,50 @@
 
 
         <!-- Trial Interface Section (Hidden by default) -->
-        <div id="trial-interface-section" class="w-full lg:flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6 hidden">
+        <div id="trial-interface-section" class="w-full lg:flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
             <!-- Left Panel: Role Selection -->
             <div class="lg:w-1/2 flex flex-col space-y-6">
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4">Peran Anda:</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Hakim" disabled>
-                            <span class="text-4xl">👨‍⚖️</span>
-                            <span class="mt-2 text-md font-medium text-gray-700">Hakim</span>
+                <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Peran Anda:</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Hakim" disabled>
+                            <span class="text-3xl sm:text-4xl">👨‍⚖️</span>
+                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Hakim</span>
                         </button>
-                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Penggugat" disabled>
-                            <span class="text-4xl">👨‍💼</span>
-                            <span class="mt-2 text-md font-medium text-gray-700">Penggugat</span>
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Penggugat" disabled>
+                            <span class="text-3xl sm:text-4xl">👨‍💼</span>
+                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Penggugat</span>
                         </button>
-                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Tergugat" disabled>
-                            <span class="text-4xl">👩‍💼</span>
-                            <span class="mt-2 text-md font-medium text-gray-700">Tergugat</span>
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Tergugat" disabled>
+                            <span class="text-3xl sm:text-4xl">👩‍💼</span>
+                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Tergugat</span>
                         </button>
-                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Saksi" disabled>
-                            <span class="text-4xl">🗣️</span>
-                            <span class="mt-2 text-md font-medium text-gray-700">Saksi</span>
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Saksi" disabled>
+                            <span class="text-3xl sm:text-4xl">🗣️</span>
+                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Saksi</span>
                         </button>
-                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Panitera" disabled>
-                            <span class="text-4xl">📝</span>
-                            <span class="mt-2 text-md font-medium text-gray-700">Panitera</span>
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Panitera" disabled>
+                            <span class="text-3xl sm:text-4xl">📝</span>
+                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Panitera</span>
                         </button>
                     </div>
-                    <p id="selected-role-display" class="mt-4 text-center text-lg font-medium text-gray-700">
+                    <p id="selected-role-display" class="mt-3 sm:mt-4 text-center text-sm sm:text-lg font-medium text-gray-700">
                         Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>
                     </p>
-                    <div id="current-user-info" class="mt-6 text-center text-gray-700">
+                    <div id="current-user-info" class="mt-4 sm:mt-6 text-center text-gray-700 text-sm sm:text-base">
                         <p id="user-display-name"></p>
-                        <p>ID Sidang: <span id="room-id-display" class="font-bold text-blue-700"></span></p>
-                        <button id="leave-room-button" class="mt-2 bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition duration-200 shadow-md">
+                        <p class="mt-1">ID Sidang: <span id="room-id-display" class="font-bold text-blue-700"></span></p>
+                        <button id="leave-room-button" class="mt-2 bg-yellow-600 text-white py-1.5 px-3 rounded-lg hover:bg-yellow-700 transition duration-200 shadow-md text-xs sm:text-sm">
                             Tinggalkan Sidang
                         </button>
-                        <button id="logout-button-trial" class="mt-2 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
+                        <button id="logout-button-trial" class="mt-2 bg-red-600 text-white py-1.5 px-3 rounded-lg hover:bg-red-700 transition duration-200 shadow-md text-xs sm:text-sm">
                             Keluar
                         </button>
                     </div>
                 </div>
-                <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200 flex-grow">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Skenario Kasus Saat Ini:</h3>
-                    <p id="current-scenario-display" class="text-gray-600 text-sm italic">
+                <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 flex-grow">
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-700 mb-2">Skenario Kasus Saat Ini:</h3>
+                    <p id="current-scenario-display" class="text-gray-600 text-xs sm:text-sm italic">
                         <!-- Scenario will be displayed here after starting the trial -->
                     </p>
                 </div>
@@ -264,29 +277,29 @@
 
             <!-- Right Panel: Chat Interface -->
             <div class="lg:w-1/2 flex flex-col space-y-6">
-                <div class="flex-grow bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Jalannya Persidangan</h2>
-                    <div id="current-speaker-display" class="text-center text-lg font-medium text-gray-700 mb-4">
+                <div class="flex-grow bg-gray-50 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Jalannya Persidangan</h2>
+                    <div id="current-speaker-display" class="text-center text-sm sm:text-lg font-medium text-gray-700 mb-4">
                         Giliran Bicara: <span class="font-semibold text-green-600" id="speaker-name">Memuat...</span>
                     </div>
-                    <div id="chat-area" class="chat-area flex-grow bg-white p-4 rounded-lg border border-gray-300 overflow-y-auto mb-4" style="height: 400px;">
+                    <div id="chat-area" class="chat-area flex-grow bg-white p-3 sm:p-4 rounded-lg border border-gray-300 overflow-y-auto mb-4" style="height: 400px;">
                         <!-- Chat messages will appear here -->
                     </div>
 
                     <div class="loading-spinner" id="loading-spinner"></div>
 
                     <div class="mt-auto">
-                        <label for="statement-input" class="block text-md font-medium text-gray-700 mb-2">Pernyataan Anda:</label>
-                        <textarea id="statement-input" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y" placeholder="Ketik pernyataan Anda di sini..."></textarea>
+                        <label for="statement-input" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Pernyataan Anda:</label>
+                        <textarea id="statement-input" rows="4" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y text-sm sm:text-base" placeholder="Ketik pernyataan Anda di sini..."></textarea>
                         
                         <div class="flex flex-col md:flex-row gap-2 mt-4">
-                            <button id="submit-statement-button" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button id="submit-statement-button" class="w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
                                 Kirim Pernyataan
                             </button>
-                            <button id="summarize-button" class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button id="summarize-button" class="w-full bg-purple-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
                                 ✨ Ringkas Persidangan
                             </button>
-                            <button id="suggest-questions-button" class="w-full bg-teal-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                            <button id="suggest-questions-button" class="w-full bg-teal-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
                                 ✨ Saran Pertanyaan
                             </button>
                         </div>
@@ -305,9 +318,9 @@
             storageBucket: "sample-firebase-ai-app-f7271.firebasestorage.app",
             messagingSenderId: "855997436295",
             appId: "1:855997436295:web:c9dfdeeb1309b88bc30322"
-        };
-        let __app_id = 'default-app-id'; // Fallback
-        let __initial_auth_token = undefined; // Fallback
+        }; // This will be populated from window.__firebase_config
+        let __app_id = 'default-app-id'; // Fallback for __app_id from Canvas
+        let __initial_auth_token = undefined; // Fallback for __initial_auth_token from Canvas
 
         // Initialize Firebase app and services
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -402,7 +415,7 @@
                         $('.role-button').prop('disabled', false); // Enable all role buttons initially
                         
                         // Dynamically disable 'Penggugat' if it's not the room creator
-                        const roomRef = doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId);
+                        const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId); // Corrected path
                         const roomSnap = await getDoc(roomRef);
                         if (roomSnap.exists() && roomSnap.data().createdBy !== userId) {
                             $(`button[data-role="Penggugat"]`).prop('disabled', true);
@@ -461,7 +474,7 @@
 
                 // The API key is usually provided by the environment for Canvas apps.
                 // If running locally or for specific models, you might need to insert it here.
-                const apiKey = "AIzaSyA4p9orSNKzkVFOa0IAGca1GNqSFCg11vo"; // Replace with your actual Gemini API Key if needed for local testing
+                const apiKey = "AIzaSyA4p9orSNKzkVFOa0IAGca1GNqSFCg11vo"; // Canvas will automatically provide this at runtime
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -521,21 +534,21 @@
                 // For initial Hakim call, we need to manually add it to Firestore and local history
                 if (isInitialHakimCall) {
                     // This message will be displayed via the snapshot listener
-                    await addDoc(collection(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'chatMessages'), {
+                    await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { // Corrected path
                         role: llmResponseRole,
                         text: llmResponseText,
                         isUser: false, // Hakim is AI
                         timestamp: serverTimestamp()
                     });
                     // Set initial speaker state in Firestore
-                    await setDoc(doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'state', 'currentSpeaker'), {
+                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { // Corrected path
                         speaker: "Penggugat" // After Hakim's opening, it's always the Penggugat's turn
                     });
                 } else if (isFeatureCall) {
                     addMessageToChat(llmResponseRole, llmResponseText, false); 
                 } else {
                     // Update current speaker state in Firestore for regular turns
-                    await setDoc(doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'state', 'currentSpeaker'), {
+                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { // Corrected path
                         speaker: nextDirectedSpeaker
                     });
                 }
@@ -545,7 +558,7 @@
                 addMessageToChat("Sistem", "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.");
                 // Fallback to Hakim in case of error in main flow
                 if (!isFeatureCall && !isInitialHakimCall) {
-                    await setDoc(doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'state', 'currentSpeaker'), {
+                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { // Corrected path
                         speaker: "Hakim"
                     });
                 }
@@ -567,7 +580,7 @@
                 return;
             }
 
-            const newRoomRef = doc(collection(db, 'artifacts', __app_id, 'public', 'rooms'));
+            const newRoomRef = doc(collection(db, 'artifacts', __app_id, 'rooms')); // Corrected path
             const newRoomId = newRoomRef.id;
             currentRoomId = newRoomId;
 
@@ -623,7 +636,7 @@
                 return;
             }
 
-            const roomRef = doc(db, 'artifacts', __app_id, 'public', 'rooms', roomId);
+            const roomRef = doc(db, 'artifacts', __app_id, 'rooms', roomId); // Corrected path
             try {
                 const roomSnap = await getDoc(roomRef);
                 if (!roomSnap.exists()) {
@@ -637,7 +650,7 @@
                 $('#current-scenario-display').text(currentScenario);
 
                 // Fetch current speaker state
-                const speakerStateRef = doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'state', 'currentSpeaker');
+                const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'); // Corrected path
                 const speakerSnap = await getDoc(speakerStateRef);
                 if (speakerSnap.exists()) {
                     currentSpeaker = speakerSnap.data().speaker;
@@ -714,7 +727,7 @@
                 unsubscribeFromSpeaker = null;
             }
 
-            const chatCollectionRef = collection(db, 'artifacts', __app_id, 'public', 'rooms', roomId, 'chatMessages');
+            const chatCollectionRef = collection(db, 'artifacts', __app_id, 'rooms', roomId, 'chatMessages'); // Corrected path
             const q = query(chatCollectionRef, orderBy('timestamp'));
 
             unsubscribeFromChat = onSnapshot(q, (snapshot) => {
@@ -730,7 +743,7 @@
                 addMessageToChat("Sistem", "Gagal memuat riwayat obrolan.", false);
             });
 
-            const speakerStateRef = doc(db, 'artifacts', __app_id, 'public', 'rooms', roomId, 'state', 'currentSpeaker');
+            const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', roomId, 'state', 'currentSpeaker'); // Corrected path
             unsubscribeFromSpeaker = onSnapshot(speakerStateRef, (speakerDoc) => {
                 if (speakerDoc.exists() && speakerDoc.data().speaker) {
                     currentSpeaker = speakerDoc.data().speaker;
@@ -989,7 +1002,7 @@
                 }
 
                 // Add to Firestore and it will reflect in UI via snapshot listener
-                await addDoc(collection(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'chatMessages'), {
+                await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { // Corrected path
                     role: selectedRole,
                     text: userStatement,
                     isUser: true,
