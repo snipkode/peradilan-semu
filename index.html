@@ -119,6 +119,18 @@
         .role-radio-group input[type="radio"] {
             margin-right: 0.5rem;
         }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 70%;
+            }
+        }
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 60%;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 sm:p-6">
@@ -217,7 +229,7 @@
                     Masukkan skenario kasus perdata untuk sidang baru ini. ID sidang akan dibuat otomatis.
                 </p>
                 <label for="new-scenario-input" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Skenario Perkara:</label>
-                <textarea id="new-scenario-input" rows="8" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y" placeholder="Contoh: Sebuah sengketa perdata antara Bapak Budi (Penggugat) dan Ibu Siti (Tergugat) mengenai wanprestasi perjanjian sewa-menyewa rumah. Bapak Budi mengklaim Ibu Siti belum membayar sewa selama 3 bulan, sementara Ibu Siti menyatakan rumah tersebut tidak layak huni dan Bapak Budi tidak pernah melakukan perbaikan."></textarea>
+                <textarea id="new-scenario-input" rows="8" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y text-sm sm:text-base" placeholder="Contoh: Sebuah sengketa perdata antara Bapak Budi (Penggugat) dan Ibu Siti (Tergugat) mengenai wanprestasi perjanjian sewa-menyewa rumah. Bapak Budi mengklaim Ibu Siti belum membayar sewa selama 3 bulan, sementara Ibu Siti menyatakan rumah tersebut tidak layak huni dan Bapak Budi tidak pernah melakukan perbaikan."></textarea>
                 <button id="submit-new-scenario-button" class="mt-4 sm:mt-6 w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
                     Buat Sidang
                 </button>
@@ -355,14 +367,51 @@
             $('#statement-input').prop('disabled', disabled);
         }
 
+        // Function to parse basic Markdown to HTML
+        function parseMarkdown(markdownText) {
+            let htmlText = markdownText;
+
+            // Headers (simple # and ## for now)
+            htmlText = htmlText.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+            htmlText = htmlText.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+            htmlText = htmlText.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+            // Bold text
+            htmlText = htmlText.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+            htmlText = htmlText.replace(/__(.*?)__/gim, '<strong>$1</strong>');
+
+            // Italic text
+            htmlText = htmlText.replace(/\*(.*?)\*/gim, '<em>$1</em>');
+            htmlText = htmlText.replace(/_(.*?)_/gim, '<em>$1</em>');
+
+            // Lists (simple unordered)
+            htmlText = htmlText.replace(/^\s*\-\s(.*$)/gim, '<li>$1</li>'); // For single line items
+            // If the LLM generates multiline lists, this needs more complex parsing
+            if (htmlText.includes('<li>')) {
+                htmlText = `<ul>${htmlText}</ul>`;
+            }
+
+            // Newlines to <br> for simple line breaks within paragraphs
+            htmlText = htmlText.replace(/\n/g, '<br>');
+
+            return htmlText;
+        }
+
+
         // Function to add message to chat area
         function addMessageToChat(role, text, isUser = false) {
             const messageHtml = `
                 <div class="chat-bubble ${isUser ? 'user ml-auto' : 'system mr-auto'}">
-                    <p class="text-sm text-gray-800"><span class="font-semibold ${isUser ? 'text-green-700' : 'text-blue-700'}">${role}:</span> ${text}</p>
+                    <p class="text-sm text-gray-800"></p>
                 </div>
             `;
-            $('#chat-area').append(messageHtml);
+            const $messageBubble = $(messageHtml);
+            
+            // If it's a system/AI message, parse markdown. Otherwise, just set text.
+            const content = isUser ? text : parseMarkdown(text);
+            $messageBubble.find('p').html(`<span class="font-semibold ${isUser ? 'text-green-700' : 'text-blue-700'}">${role}:</span> ${content}`);
+
+            $('#chat-area').append($messageBubble);
             $('#chat-area').scrollTop($('#chat-area')[0].scrollHeight);
         }
 
@@ -415,7 +464,7 @@
                         $('.role-button').prop('disabled', false); // Enable all role buttons initially
                         
                         // Dynamically disable 'Penggugat' if it's not the room creator
-                        const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId); // Corrected path
+                        const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId); 
                         const roomSnap = await getDoc(roomRef);
                         if (roomSnap.exists() && roomSnap.data().createdBy !== userId) {
                             $(`button[data-role="Penggugat"]`).prop('disabled', true);
@@ -534,21 +583,21 @@
                 // For initial Hakim call, we need to manually add it to Firestore and local history
                 if (isInitialHakimCall) {
                     // This message will be displayed via the snapshot listener
-                    await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { // Corrected path
+                    await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { 
                         role: llmResponseRole,
                         text: llmResponseText,
                         isUser: false, // Hakim is AI
                         timestamp: serverTimestamp()
                     });
                     // Set initial speaker state in Firestore
-                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { // Corrected path
+                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { 
                         speaker: "Penggugat" // After Hakim's opening, it's always the Penggugat's turn
                     });
                 } else if (isFeatureCall) {
                     addMessageToChat(llmResponseRole, llmResponseText, false); 
                 } else {
                     // Update current speaker state in Firestore for regular turns
-                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { // Corrected path
+                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { 
                         speaker: nextDirectedSpeaker
                     });
                 }
@@ -558,7 +607,7 @@
                 addMessageToChat("Sistem", "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.");
                 // Fallback to Hakim in case of error in main flow
                 if (!isFeatureCall && !isInitialHakimCall) {
-                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { // Corrected path
+                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { 
                         speaker: "Hakim"
                     });
                 }
@@ -580,7 +629,7 @@
                 return;
             }
 
-            const newRoomRef = doc(collection(db, 'artifacts', __app_id, 'rooms')); // Corrected path
+            const newRoomRef = doc(collection(db, 'artifacts', __app_id, 'rooms')); 
             const newRoomId = newRoomRef.id;
             currentRoomId = newRoomId;
 
@@ -636,7 +685,7 @@
                 return;
             }
 
-            const roomRef = doc(db, 'artifacts', __app_id, 'rooms', roomId); // Corrected path
+            const roomRef = doc(db, 'artifacts', __app_id, 'rooms', roomId); 
             try {
                 const roomSnap = await getDoc(roomRef);
                 if (!roomSnap.exists()) {
@@ -650,7 +699,7 @@
                 $('#current-scenario-display').text(currentScenario);
 
                 // Fetch current speaker state
-                const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'); // Corrected path
+                const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'); 
                 const speakerSnap = await getDoc(speakerStateRef);
                 if (speakerSnap.exists()) {
                     currentSpeaker = speakerSnap.data().speaker;
@@ -727,7 +776,7 @@
                 unsubscribeFromSpeaker = null;
             }
 
-            const chatCollectionRef = collection(db, 'artifacts', __app_id, 'rooms', roomId, 'chatMessages'); // Corrected path
+            const chatCollectionRef = collection(db, 'artifacts', __app_id, 'rooms', roomId, 'chatMessages'); 
             const q = query(chatCollectionRef, orderBy('timestamp'));
 
             unsubscribeFromChat = onSnapshot(q, (snapshot) => {
@@ -743,7 +792,7 @@
                 addMessageToChat("Sistem", "Gagal memuat riwayat obrolan.", false);
             });
 
-            const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', roomId, 'state', 'currentSpeaker'); // Corrected path
+            const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', roomId, 'state', 'currentSpeaker'); 
             unsubscribeFromSpeaker = onSnapshot(speakerStateRef, (speakerDoc) => {
                 if (speakerDoc.exists() && speakerDoc.data().speaker) {
                     currentSpeaker = speakerDoc.data().speaker;
@@ -919,6 +968,8 @@
                 }
                 const roomId = $('#join-room-id').val().trim();
                 if (roomId === '') {
+                    $('#join-room-id').addClass('border-red-500');
+                    setTimeout(() => { $('#join-room-id').removeClass('border-red-500'); }, 2000);
                     addMessageToChat("Sistem", "Mohon masukkan ID sidang.", false);
                     return;
                 }
@@ -1002,7 +1053,7 @@
                 }
 
                 // Add to Firestore and it will reflect in UI via snapshot listener
-                await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { // Corrected path
+                await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { 
                     role: selectedRole,
                     text: userStatement,
                     isUser: true,
