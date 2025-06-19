@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulasi Peradilan Semu Hukum Acara Perdata</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jQuery CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- Inter Font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 90%; /* Adjust as needed for larger screens */
+            margin: 0 auto;
+            padding: 1.5rem; /* Reduced padding */
+        }
+        .chat-bubble {
+            max-width: 80%;
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 0.75rem 1rem; /* p-3 px-4 */
+            margin-bottom: 0.75rem; /* mb-3 */
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* shadow-sm */
+        }
+        .chat-bubble.user {
+            background-color: #d1fae5; /* green-100 */
+            align-self: flex-end; /* ml-auto */
+        }
+        .chat-bubble.system {
+            background-color: #e0f2fe; /* blue-100 */
+            align-self: flex-start; /* mr-auto */
+        }
+        /* Custom scrollbar for chat area */
+        .chat-area::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .chat-area::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .chat-area::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        .loading-spinner {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+            margin: 0.5rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .role-selected {
+            border: 2px solid #2563eb; /* blue-600 */
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5); /* ring-2 ring-blue-500 */
+        }
+        /* For role radio buttons */
+        .role-radio-group label {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            margin-bottom: 0.5rem;
+        }
+        .role-radio-group label:hover {
+            background-color: #f3f4f6;
+        }
+        .role-radio-group input[type="radio"]:checked + span {
+            font-weight: 600;
+            color: #2563eb;
+        }
+        .role-radio-group input[type="radio"]:checked + span::before {
+            content: '✅ '; /* Checkmark for selected radio */
+        }
+        .role-radio-group input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 70%;
+            }
+        }
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 60%;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="container bg-white p-6 rounded-xl shadow-lg flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+        <!-- Auth Section -->
+        <div id="auth-section" class="w-full flex flex-col space-y-6">
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Masuk / Daftar</h2>
+                <p id="auth-message" class="text-center text-red-500 mb-4 hidden"></p>
+                
+                <div id="login-form">
+                    <label for="login-email" class="block text-md font-medium text-gray-700 mb-2">Email:</label>
+                    <input type="email" id="login-email" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="email@example.com">
+                    
+                    <label for="login-password" class="block text-md font-medium text-gray-700 mt-4 mb-2">Kata Sandi:</label>
+                    <input type="password" id="login-password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="********">
+                    
+                    <button id="login-submit-button" class="mt-6 w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                        Masuk
+                    </button>
+                    <p class="text-center text-gray-600 mt-4">Belum punya akun? <a href="#" id="show-register" class="text-blue-600 hover:underline">Daftar di sini</a></p>
+                </div>
+
+                <div id="register-form" class="hidden">
+                    <label for="register-email" class="block text-md font-medium text-gray-700 mb-2">Email:</label>
+                    <input type="email" id="register-email" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="email@example.com">
+                    
+                    <label for="register-password" class="block text-md font-medium text-gray-700 mt-4 mb-2">Kata Sandi:</label>
+                    <input type="password" id="register-password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Minimal 6 karakter">
+                    
+                    <label for="register-confirm-password" class="block text-md font-medium text-gray-700 mt-4 mb-2">Konfirmasi Kata Sandi:</label>
+                    <input type="password" id="register-confirm-password" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Ulangi kata sandi">
+
+                    <label class="block text-md font-medium text-gray-700 mt-4 mb-2">Pilih Peran Default Anda:</label>
+                    <div class="role-radio-group flex flex-col space-y-2">
+                        <label>
+                            <input type="radio" name="register-role" value="Penggugat" class="form-radio text-blue-600" checked>
+                            <span>Penggugat</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="register-role" value="Tergugat" class="form-radio text-blue-600">
+                            <span>Tergugat</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="register-role" value="Saksi" class="form-radio text-blue-600">
+                            <span>Saksi</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="register-role" value="Panitera" class="form-radio text-blue-600">
+                            <span>Panitera</span>
+                        </label>
+                        <label>
+                            <input type="radio" name="register-role" value="Hakim" class="form-radio text-blue-600">
+                            <span>Hakim</span>
+                        </label>
+                    </div>
+                    
+                    <button id="register-submit-button" class="mt-6 w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                        Daftar
+                    </button>
+                    <p class="text-center text-gray-600 mt-4">Sudah punya akun? <a href="#" id="show-login" class="text-blue-600 hover:underline">Masuk di sini</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Selection Section (Hidden by default) -->
+        <div id="room-selection-section" class="w-full flex-col space-y-6 hidden">
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Pilih Sidang</h2>
+                <p id="user-info-room-select" class="text-center text-gray-700 mb-4">Memuat...</p>
+                
+                <button id="create-room-button" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                    Buat Sidang Baru (Anda akan menjadi Penggugat)
+                </button>
+
+                <div class="mt-6 text-center text-gray-700">Atau</div>
+
+                <div class="mt-6">
+                    <label for="join-room-id" class="block text-md font-medium text-gray-700 mb-2">ID Sidang:</label>
+                    <input type="text" id="join-room-id" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Masukkan ID sidang yang ada">
+                    <button id="join-room-button" class="mt-4 w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                        Gabung Sidang
+                    </button>
+                </div>
+                <button id="logout-button-room-select" class="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
+                    Keluar
+                </button>
+            </div>
+        </div>
+
+        <!-- Scenario Setup Section (Hidden by default - part of create room flow) -->
+        <div id="create-scenario-section" class="w-full flex-col space-y-6 hidden">
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Atur Skenario Sidang Baru</h2>
+                <p class="text-gray-700 leading-relaxed mb-4">
+                    Masukkan skenario kasus perdata untuk sidang baru ini. ID sidang akan dibuat otomatis.
+                </p>
+                <label for="new-scenario-input" class="block text-md font-medium text-gray-700 mb-2">Skenario Perkara:</label>
+                <textarea id="new-scenario-input" rows="8" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y" placeholder="Contoh: Sebuah sengketa perdata antara Bapak Budi (Penggugat) dan Ibu Siti (Tergugat) mengenai wanprestasi perjanjian sewa-menyewa rumah. Bapak Budi mengklaim Ibu Siti belum membayar sewa selama 3 bulan, sementara Ibu Siti menyatakan rumah tersebut tidak layak huni dan Bapak Budi tidak pernah melakukan perbaikan."></textarea>
+                <button id="submit-new-scenario-button" class="mt-6 w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md">
+                    Buat Sidang
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Trial Interface Section (Hidden by default) -->
+        <div id="trial-interface-section" class="w-full lg:flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6 hidden">
+            <!-- Left Panel: Role Selection -->
+            <div class="lg:w-1/2 flex flex-col space-y-6">
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">Peran Anda:</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Hakim" disabled>
+                            <span class="text-4xl">👨‍⚖️</span>
+                            <span class="mt-2 text-md font-medium text-gray-700">Hakim</span>
+                        </button>
+                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Penggugat" disabled>
+                            <span class="text-4xl">👨‍💼</span>
+                            <span class="mt-2 text-md font-medium text-gray-700">Penggugat</span>
+                        </button>
+                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Tergugat" disabled>
+                            <span class="text-4xl">👩‍💼</span>
+                            <span class="mt-2 text-md font-medium text-gray-700">Tergugat</span>
+                        </button>
+                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Saksi" disabled>
+                            <span class="text-4xl">🗣️</span>
+                            <span class="mt-2 text-md font-medium text-gray-700">Saksi</span>
+                        </button>
+                        <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Panitera" disabled>
+                            <span class="text-4xl">📝</span>
+                            <span class="mt-2 text-md font-medium text-gray-700">Panitera</span>
+                        </button>
+                    </div>
+                    <p id="selected-role-display" class="mt-4 text-center text-lg font-medium text-gray-700">
+                        Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>
+                    </p>
+                    <div id="current-user-info" class="mt-6 text-center text-gray-700">
+                        <p id="user-display-name"></p>
+                        <p>ID Sidang: <span id="room-id-display" class="font-bold text-blue-700"></span></p>
+                        <button id="leave-room-button" class="mt-2 bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition duration-200 shadow-md">
+                            Tinggalkan Sidang
+                        </button>
+                        <button id="logout-button-trial" class="mt-2 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 shadow-md">
+                            Keluar
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200 flex-grow">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Skenario Kasus Saat Ini:</h3>
+                    <p id="current-scenario-display" class="text-gray-600 text-sm italic">
+                        <!-- Scenario will be displayed here after starting the trial -->
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Panel: Chat Interface -->
+            <div class="lg:w-1/2 flex flex-col space-y-6">
+                <div class="flex-grow bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Jalannya Persidangan</h2>
+                    <div id="current-speaker-display" class="text-center text-lg font-medium text-gray-700 mb-4">
+                        Giliran Bicara: <span class="font-semibold text-green-600" id="speaker-name">Memuat...</span>
+                    </div>
+                    <div id="chat-area" class="chat-area flex-grow bg-white p-4 rounded-lg border border-gray-300 overflow-y-auto mb-4" style="height: 400px;">
+                        <!-- Chat messages will appear here -->
+                    </div>
+
+                    <div class="loading-spinner" id="loading-spinner"></div>
+
+                    <div class="mt-auto">
+                        <label for="statement-input" class="block text-md font-medium text-gray-700 mb-2">Pernyataan Anda:</label>
+                        <textarea id="statement-input" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y" placeholder="Ketik pernyataan Anda di sini..."></textarea>
+                        
+                        <div class="flex flex-col md:flex-row gap-2 mt-4">
+                            <button id="submit-statement-button" class="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                                Kirim Pernyataan
+                            </button>
+                            <button id="summarize-button" class="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                                ✨ Ringkas Persidangan
+                            </button>
+                            <button id="suggest-questions-button" class="w-full bg-teal-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                                ✨ Saran Pertanyaan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Global variables for Firebase configuration, initialized later
+        let firebaseConfig = {
+            apiKey: "AIzaSyBg17cVwN2RqFHfs5UW4p9hCAym8MRPMRk",
+            authDomain: "sample-firebase-ai-app-f7271.firebaseapp.com",
+            projectId: "sample-firebase-ai-app-f7271",
+            storageBucket: "sample-firebase-ai-app-f7271.firebasestorage.app",
+            messagingSenderId: "855997436295",
+            appId: "1:855997436295:web:c9dfdeeb1309b88bc30322"
+        };
+        let __app_id = 'default-app-id'; // Fallback
+        let __initial_auth_token = undefined; // Fallback
+
+        // Initialize Firebase app and services
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        let app, db, auth, userId;
+        let userDefaultRole = null; // New: role selected during registration
+        let selectedRole = null; // Role assigned for the current room
+        let currentSpeaker = '';
+        let chatHistory = [];
+        let currentScenario = '';
+        let currentRoomId = null;
+        let unsubscribeFromChat = null; // To store the unsubscribe function for chat snapshot listener
+        let unsubscribeFromSpeaker = null; // To store the unsubscribe function for speaker snapshot listener
+
+        // Function to update the display of the current speaker
+        function updateSpeakerDisplay() {
+            $('#speaker-name').text(currentSpeaker);
+            // Highlight the assigned role button if it matches the current speaker
+            $('.role-button').removeClass('role-selected border-green-600 ring-2 ring-green-500'); // Remove all highlights first
+            if (currentSpeaker && selectedRole === currentSpeaker) { // Only highlight if the user's assigned role is the current speaker
+                $(`button[data-role="${currentSpeaker}"]`).addClass('role-selected border-green-600 ring-2 ring-green-500');
+            }
+        }
+
+        // Function to enable/disable statement input and action buttons
+        function setInputAndFeatureButtonsState(disabled) {
+            $('#submit-statement-button').prop('disabled', disabled);
+            $('#summarize-button').prop('disabled', disabled);
+            $('#suggest-questions-button').prop('disabled', disabled);
+            $('#statement-input').prop('disabled', disabled);
+        }
+
+        // Function to add message to chat area
+        function addMessageToChat(role, text, isUser = false) {
+            const messageHtml = `
+                <div class="chat-bubble ${isUser ? 'user ml-auto' : 'system mr-auto'}">
+                    <p class="text-sm text-gray-800"><span class="font-semibold ${isUser ? 'text-green-700' : 'text-blue-700'}">${role}:</span> ${text}</p>
+                </div>
+            `;
+            $('#chat-area').append(messageHtml);
+            $('#chat-area').scrollTop($('#chat-area')[0].scrollHeight);
+        }
+
+        // Function to update UI elements based on authentication status and selected role
+        async function updateUIBasedOnAuthAndRole() {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                userId = currentUser.uid;
+                $('#user-display-name').text(`Pengguna: ${currentUser.email}`);
+                
+                // Fetch user's default registered role
+                const userProfileRef = doc(db, 'artifacts', __app_id, 'users', userId, 'profile', 'data');
+                const profileSnap = await getDoc(userProfileRef);
+                if (profileSnap.exists() && profileSnap.data().defaultRole) {
+                    userDefaultRole = profileSnap.data().defaultRole;
+                } else {
+                    userDefaultRole = null;
+                }
+
+                // Show room selection if no room is active
+                if (!currentRoomId) {
+                    $('#auth-section').addClass('hidden');
+                    $('#room-selection-section').removeClass('hidden');
+                    $('#create-scenario-section').addClass('hidden');
+                    $('#trial-interface-section').addClass('hidden');
+                    $('#user-info-room-select').text(`Masuk sebagai: ${currentUser.email}`);
+                } else {
+                    // In a room, show trial interface
+                    $('#auth-section').addClass('hidden');
+                    $('#room-selection-section').addClass('hidden');
+                    $('#create-scenario-section').addClass('hidden');
+                    $('#trial-interface-section').removeClass('hidden');
+                    $('#room-id-display').text(currentRoomId);
+
+                    // Fetch user's role for the current room
+                    const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
+                    const docSnap = await getDoc(userRoomRoleRef);
+
+                    if (docSnap.exists() && docSnap.data().role) {
+                        selectedRole = docSnap.data().role;
+                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
+                        // Highlight the assigned role button and disable all role buttons
+                        $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
+                        $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
+                        $('.role-button').prop('disabled', true); 
+                    } else {
+                        // If no role saved for this room, enable selection based on default role
+                        selectedRole = null;
+                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>`);
+                        $('.role-button').prop('disabled', false); // Enable all role buttons initially
+                        
+                        // Dynamically disable 'Penggugat' if it's not the room creator
+                        const roomRef = doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId);
+                        const roomSnap = await getDoc(roomRef);
+                        if (roomSnap.exists() && roomSnap.data().createdBy !== userId) {
+                            $(`button[data-role="Penggugat"]`).prop('disabled', true);
+                        }
+                    }
+
+                    // Enable/disable input and feature buttons based on turn and assigned role
+                    if (selectedRole && selectedRole === currentSpeaker) {
+                        setInputAndFeatureButtonsState(false);
+                    } else if (selectedRole) { // If a role is selected but not their turn
+                        setInputAndFeatureButtonsState(false); // Features still enabled
+                        $('#submit-statement-button').prop('disabled', true); // But not submit
+                    } else { // No role assigned for this room yet
+                        setInputAndFeatureButtonsState(true); // All disabled until role chosen
+                    }
+                }
+            } else {
+                userId = null;
+                userDefaultRole = null;
+                selectedRole = null;
+                currentRoomId = null; 
+                // Unsubscribe from any active listeners on logout
+                if (unsubscribeFromChat) { unsubscribeFromChat(); unsubscribeFromChat = null; }
+                if (unsubscribeFromSpeaker) { unsubscribeFromSpeaker(); unsubscribeFromSpeaker = null; }
+
+                $('#auth-section').removeClass('hidden');
+                $('#room-selection-section').addClass('hidden');
+                $('#create-scenario-section').addClass('hidden');
+                $('#trial-interface-section').addClass('hidden');
+                $('#auth-message').text('').addClass('hidden'); // Clear auth message
+                $('#login-form').removeClass('hidden');
+                $('#register-form').addClass('hidden');
+                // Ensure UI is clean on logout
+                $('#chat-area').empty();
+                chatHistory = [];
+                currentSpeaker = '';
+                updateSpeakerDisplay();
+            }
+        }
+
+        // Centralized function to call Gemini API
+        async function callGeminiApi(prompt, isFeatureCall = false, isInitialHakimCall = false) {
+            $('#loading-spinner').show();
+            setInputAndFeatureButtonsState(true); 
+
+            try {
+                const payload = {
+                    contents: [{ role: "user", parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        temperature: 0.7,
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 2000
+                    }
+                };
+
+                // The API key is usually provided by the environment for Canvas apps.
+                // If running locally or for specific models, you might need to insert it here.
+                const apiKey = "YOUR_GEMINI_API_KEY"; // Replace with your actual Gemini API Key if needed for local testing
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                let llmResponseText = "Maaf, saya tidak bisa memberikan respons saat ini.";
+                let llmResponseRole = "Sistem";
+                let nextDirectedSpeaker = currentSpeaker;
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    llmResponseText = result.candidates[0].content.parts[0].text;
+
+                    if (!isFeatureCall) {
+                        const roles = ["Hakim", "Penggugat", "Tergugat", "Saksi", "Panitera"];
+                        const match = llmResponseText.match(/^(Hakim)\s?\(untuk\s(Penggugat|Tergugat|Saksi|Panitera)\):\s*(.*)/i);
+                        if (match) {
+                            llmResponseRole = match[1];
+                            nextDirectedSpeaker = match[2];
+                            llmResponseText = match[3].trim();
+                        } else {
+                            for (const role of roles) {
+                                if (llmResponseText.startsWith(`${role}:`)) {
+                                    llmResponseRole = role;
+                                    llmResponseText = llmResponseText.substring(`${role}:`.length).trim();
+                                    break;
+                                }
+                            }
+                            if (llmResponseRole === "Hakim") {
+                                nextDirectedSpeaker = "Hakim";
+                            } else {
+                                nextDirectedSpeaker = llmResponseRole;
+                            }
+                        }
+                    } else {
+                        llmResponseRole = "Asisten AI";
+                        nextDirectedSpeaker = currentSpeaker; 
+                    }
+
+                    if (llmResponseRole === "Hakim") {
+                        llmResponseRole = "Hakim (AI)";
+                    }
+
+                } else {
+                    console.error("Unexpected LLM response structure:", result);
+                    // If LLM response structure is unexpected, ensure nextDirectedSpeaker is set
+                    // for proper UI state in finally block.
+                    nextDirectedSpeaker = currentSpeaker;
+                }
+
+                // For initial Hakim call, we need to manually add it to Firestore and local history
+                if (isInitialHakimCall) {
+                    // This message will be displayed via the snapshot listener
+                    await addDoc(collection(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'chatMessages'), {
+                        role: llmResponseRole,
+                        text: llmResponseText,
+                        isUser: false, // Hakim is AI
+                        timestamp: serverTimestamp()
+                    });
+                    // Set initial speaker state in Firestore
+                    await setDoc(doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'state', 'currentSpeaker'), {
+                        speaker: "Penggugat" // After Hakim's opening, it's always the Penggugat's turn
+                    });
+                } else if (isFeatureCall) {
+                    addMessageToChat(llmResponseRole, llmResponseText, false); 
+                } else {
+                    // Update current speaker state in Firestore for regular turns
+                    await setDoc(doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'state', 'currentSpeaker'), {
+                        speaker: nextDirectedSpeaker
+                    });
+                }
+
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                addMessageToChat("Sistem", "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.");
+                // Fallback to Hakim in case of error in main flow
+                if (!isFeatureCall && !isInitialHakimCall) {
+                    await setDoc(doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'state', 'currentSpeaker'), {
+                        speaker: "Hakim"
+                    });
+                }
+            } finally {
+                $('#loading-spinner').hide();
+                updateUIBasedOnAuthAndRole(); // Re-evaluate UI state
+            }
+        }
+
+        // --- ROOM MANAGEMENT ---
+        async function createNewRoom(scenarioText) {
+            if (!userId) {
+                addMessageToChat("Sistem", "Anda harus masuk untuk membuat sidang baru.", false);
+                return;
+            }
+            // For room creation, the creator is always Penggugat
+            if (userDefaultRole && userDefaultRole !== "Penggugat") {
+                addMessageToChat("Sistem", "Untuk membuat sidang baru, Anda harus mendaftar sebagai Penggugat atau menggunakan akun Penggugat.", false);
+                return;
+            }
+
+            const newRoomRef = doc(collection(db, 'artifacts', __app_id, 'public', 'rooms'));
+            const newRoomId = newRoomRef.id;
+            currentRoomId = newRoomId;
+
+            try {
+                // Save scenario and creator info
+                await setDoc(newRoomRef, {
+                    scenario: scenarioText,
+                    createdAt: serverTimestamp(),
+                    createdBy: userId,
+                    initialSpeaker: "Penggugat",
+                    penggugatId: userId // Mark creator as Penggugat for this room
+                });
+
+                // Set creator's role for this room to Penggugat
+                const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
+                await setDoc(userRoomRoleRef, { role: "Penggugat" }); // Creator is always Penggugat for the room they create
+
+                selectedRole = "Penggugat"; // Update local selectedRole
+
+                // Initialize chat history and speaker for this new room via LLM
+                $('#chat-area').empty(); // Clear chat area
+                chatHistory = []; // Reset local chat history
+
+                const initialHakimPrompt = `
+                    Sebagai Hakim di persidangan semu hukum acara perdata, mohon buka sidang untuk kasus berikut:
+                    "${scenarioText}"
+                    Setelah pembukaan, persilakan Penggugat untuk menyampaikan gugatannya.
+                    Format respons Anda seperti ini: Hakim (untuk Penggugat): [Pesan Pembukaan dan Permintaan untuk Penggugat].
+                `;
+                await callGeminiApi(initialHakimPrompt, false, true); // isInitialHakimCall = true
+
+                // Start listening to chat for the new room
+                startListeningToRoomChat(currentRoomId);
+
+                // Transition to trial interface
+                $('#create-scenario-section').addClass('hidden');
+                $('#trial-interface-section').removeClass('hidden');
+                updateUIBasedOnAuthAndRole(); // Update UI after setting up room
+                addMessageToChat("Sistem", `Sidang baru telah dibuat dengan ID: <span class="font-bold text-blue-700">${currentRoomId}</span>. Berikan ID ini kepada peserta lain.`, false);
+
+
+            } catch (error) {
+                console.error("Error creating new room:", error);
+                addMessageToChat("Sistem", `Gagal membuat sidang baru: ${error.message}.`, false);
+                currentRoomId = null; // Reset room ID on failure
+                updateUIBasedOnAuthAndRole(); // Go back to room selection
+            }
+        }
+
+        async function joinExistingRoom(roomId) {
+            if (!userId) {
+                addMessageToChat("Sistem", "Anda harus masuk untuk bergabung sidang.", false);
+                return;
+            }
+
+            const roomRef = doc(db, 'artifacts', __app_id, 'public', 'rooms', roomId);
+            try {
+                const roomSnap = await getDoc(roomRef);
+                if (!roomSnap.exists()) {
+                    addMessageToChat("Sistem", "ID Sidang tidak ditemukan.", false);
+                    return;
+                }
+
+                currentRoomId = roomId;
+                currentScenario = roomSnap.data().scenario;
+                $('#room-id-display').text(currentRoomId);
+                $('#current-scenario-display').text(currentScenario);
+
+                // Fetch current speaker state
+                const speakerStateRef = doc(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'state', 'currentSpeaker');
+                const speakerSnap = await getDoc(speakerStateRef);
+                if (speakerSnap.exists()) {
+                    currentSpeaker = speakerSnap.data().speaker;
+                    updateSpeakerDisplay();
+                } else {
+                    currentSpeaker = roomSnap.data().initialSpeaker || 'Penggugat'; // Fallback
+                    updateSpeakerDisplay();
+                }
+
+                // Determine user's role for this room
+                const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
+                const userRoleSnap = await getDoc(userRoomRoleRef);
+
+                if (userRoleSnap.exists() && userRoleSnap.data().role) {
+                    selectedRole = userRoleSnap.data().role;
+                    $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
+                    // Highlight the assigned role button and disable all role buttons
+                    $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
+                    $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
+                    $('.role-button').prop('disabled', true); 
+                } else {
+                    // No role assigned for this room yet, assign based on default registered role
+                    // Check if the user's default role is Penggugat and if Penggugat slot is taken
+                    if (userDefaultRole === "Penggugat" && roomSnap.data().penggugatId && roomSnap.data().penggugatId !== userId) {
+                        addMessageToChat("Sistem", "Peran Penggugat sudah diambil untuk sidang ini. Silakan pilih peran lain.", false);
+                        selectedRole = null;
+                        $('.role-button').prop('disabled', false); // Allow selection of other roles
+                        $(`button[data-role="Penggugat"]`).prop('disabled', true); // Explicitly disable Penggugat
+                    } else if (userDefaultRole) { // Assign default role if available and not Penggugat clash
+                        selectedRole = userDefaultRole;
+                        await setDoc(userRoomRoleRef, { role: selectedRole });
+                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
+                        $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
+                        $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
+                        $('.role-button').prop('disabled', true); 
+                        addMessageToChat("Sistem", `Peran Anda telah otomatis ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
+                    } else { // No default role, user must pick one
+                        selectedRole = null;
+                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>`);
+                        $('.role-button').prop('disabled', false); // Enable all role buttons
+                        // Disable Penggugat if already taken
+                        if (roomSnap.data().penggugatId) {
+                            $(`button[data-role="Penggugat"]`).prop('disabled', true);
+                        }
+                    }
+                }
+
+                // Start listening to chat for the joined room
+                startListeningToRoomChat(currentRoomId);
+
+                // Transition to trial interface
+                $('#room-selection-section').addClass('hidden');
+                $('#trial-interface-section').removeClass('hidden');
+                updateUIBasedOnAuthAndRole();
+                addMessageToChat("Sistem", `Anda telah bergabung dengan sidang ID: <span class="font-bold text-blue-700">${currentRoomId}</span>.`, false);
+
+
+            } catch (error) {
+                console.error("Error joining room:", error);
+                addMessageToChat("Sistem", `Gagal bergabung sidang: ${error.message}.`, false);
+                currentRoomId = null; // Reset room ID on failure
+                updateUIBasedOnAuthAndRole(); // Stay on room selection
+            }
+        }
+
+        function startListeningToRoomChat(roomId) {
+            // Unsubscribe from previous listener if any
+            if (unsubscribeFromChat) {
+                unsubscribeFromChat();
+                unsubscribeFromChat = null;
+            }
+            if (unsubscribeFromSpeaker) {
+                unsubscribeFromSpeaker();
+                unsubscribeFromSpeaker = null;
+            }
+
+            const chatCollectionRef = collection(db, 'artifacts', __app_id, 'public', 'rooms', roomId, 'chatMessages');
+            const q = query(chatCollectionRef, orderBy('timestamp'));
+
+            unsubscribeFromChat = onSnapshot(q, (snapshot) => {
+                $('#chat-area').empty();
+                chatHistory = [];
+                snapshot.forEach((doc) => {
+                    const message = doc.data();
+                    addMessageToChat(message.role, message.text, message.isUser);
+                    chatHistory.push({ role: message.role, text: message.text });
+                });
+            }, (error) => {
+                console.error("Error listening to chat messages:", error);
+                addMessageToChat("Sistem", "Gagal memuat riwayat obrolan.", false);
+            });
+
+            const speakerStateRef = doc(db, 'artifacts', __app_id, 'public', 'rooms', roomId, 'state', 'currentSpeaker');
+            unsubscribeFromSpeaker = onSnapshot(speakerStateRef, (speakerDoc) => {
+                if (speakerDoc.exists() && speakerDoc.data().speaker) {
+                    currentSpeaker = speakerDoc.data().speaker;
+                    updateSpeakerDisplay();
+                    updateUIBasedOnAuthAndRole(); // Re-evaluate button states based on new speaker
+                } else {
+                    currentSpeaker = 'Memuat...'; // Or a suitable default while loading
+                    updateSpeakerDisplay();
+                }
+            }, (error) => {
+                console.error("Error listening to speaker state:", error);
+                addMessageToChat("Sistem", "Gagal memuat giliran bicara.", false);
+            });
+        }
+
+        // --- JQUERY READY BLOCK ---
+        $(document).ready(function() {
+            // Check if global variables are defined by the Canvas environment
+            if (typeof window.__firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(window.__firebase_config);
+            }
+            if (typeof window.__app_id !== 'undefined') {
+                __app_id = window.__app_id;
+            }
+            if (typeof window.__initial_auth_token !== 'undefined') {
+                __initial_auth_token = window.__initial_auth_token;
+            }
+
+            // Initialize Firebase only after the DOM is ready
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            // Firebase Auth State Listener - Central point for UI updates
+            onAuthStateChanged(auth, async (user) => {
+                updateUIBasedOnAuthAndRole();
+            });
+
+            // --- AUTHENTICATION EVENT HANDLERS ---
+            $('#show-register').on('click', function(e) {
+                e.preventDefault();
+                $('#login-form').addClass('hidden');
+                $('#register-form').removeClass('hidden');
+                $('#auth-message').text('').addClass('hidden'); 
+            });
+
+            $('#show-login').on('click', function(e) {
+                e.preventDefault();
+                $('#register-form').addClass('hidden');
+                $('#login-form').removeClass('hidden');
+                $('#auth-message').text('').addClass('hidden'); 
+            });
+
+            $('#login-submit-button').on('click', async function() {
+                const email = $('#login-email').val();
+                const password = $('#login-password').val();
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    $('#auth-message').text('Berhasil masuk!').removeClass('text-red-500').addClass('text-green-500').removeClass('hidden');
+                } catch (error) {
+                    let errorMessage = "Terjadi kesalahan saat masuk.";
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                        errorMessage = "Email atau kata sandi salah.";
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = "Format email tidak valid.";
+                    } else {
+                        errorMessage = `Kesalahan: ${error.message}`;
+                    }
+                    $('#auth-message').text(errorMessage).removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
+                    console.error("Login error:", error);
+                }
+            });
+
+            $('#register-submit-button').on('click', async function() {
+                const email = $('#register-email').val();
+                const password = $('#register-password').val();
+                const confirmPassword = $('#register-confirm-password').val();
+                const defaultRole = $('input[name="register-role"]:checked').val();
+
+                if (!defaultRole) {
+                    $('#auth-message').text('Mohon pilih peran default Anda.').removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
+                    return;
+                }
+                if (password !== confirmPassword) {
+                    $('#auth-message').text('Kata sandi tidak cocok.').removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
+                    return;
+                }
+                if (password.length < 6) {
+                    $('#auth-message').text('Kata sandi minimal 6 karakter.').removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
+                    return;
+                }
+
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
+                    
+                    // Save default role to user's profile in Firestore
+                    await setDoc(doc(db, 'artifacts', __app_id, 'users', user.uid, 'profile', 'data'), {
+                        defaultRole: defaultRole,
+                        email: user.email,
+                        registeredAt: serverTimestamp()
+                    });
+
+                    $('#auth-message').text('Pendaftaran berhasil! Silakan masuk.').removeClass('text-red-500').addClass('text-green-500').removeClass('hidden');
+                    $('#register-form').addClass('hidden');
+                    $('#login-form').removeClass('hidden');
+                    // Clear registration form fields
+                    $('#register-email').val('');
+                    $('#register-password').val('');
+                    $('#register-confirm-password').val('');
+                    $('input[name="register-role"]').prop('checked', false);
+                } catch (error) {
+                    let errorMessage = "Terjadi kesalahan saat pendaftaran.";
+                    if (error.code === 'auth/email-already-in-use') {
+                        errorMessage = "Email sudah terdaftar.";
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = "Format email tidak valid.";
+                    } else if (error.code === 'auth/weak-password') {
+                        errorMessage = "Kata sandi terlalu lemah. Gunakan kombinasi huruf, angka, dan simbol.";
+                    } else if (error.code === 'auth/operation-not-allowed') {
+                        errorMessage = "Pendaftaran dengan Email/Kata Sandi tidak diizinkan. Mohon aktifkan di konsol Firebase Anda (Authentication -> Sign-in method -> Email/Password).";
+                        console.warn("Firebase Error: Email/Password sign-in is not enabled. Please enable it in your Firebase project settings (Authentication -> Sign-in method).");
+                    }
+                    $('#auth-message').text(errorMessage).removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
+                    console.error("Register error:", error);
+                }
+            });
+
+            // Logout buttons (unified handling)
+            $('#logout-button-room-select, #logout-button-trial').on('click', async function() {
+                try {
+                    // updateUIBasedOnAuthAndRole will handle cleanup of listeners and UI on auth state change
+                    await signOut(auth); 
+                } catch (error) {
+                    console.error("Error during sign-out:", error);
+                    addMessageToChat("Sistem", `Kesalahan keluar: ${error.message}`, false);
+                }
+            });
+
+            // Handle Leave Room button
+            $('#leave-room-button').on('click', async function() {
+                if (unsubscribeFromChat) { unsubscribeFromChat(); unsubscribeFromChat = null; }
+                if (unsubscribeFromSpeaker) { unsubscribeFromSpeaker(); unsubscribeFromSpeaker = null; }
+                currentRoomId = null;
+                chatHistory = [];
+                $('#chat-area').empty();
+                currentSpeaker = ''; // Reset speaker display
+                updateSpeakerDisplay();
+                updateUIBasedOnAuthAndRole(); // Transition back to room selection
+                addMessageToChat("Sistem", "Anda telah meninggalkan sidang.", false);
+            });
+
+            // --- ROOM SELECTION EVENT HANDLERS ---
+            $('#create-room-button').on('click', function() {
+                if (!userId) {
+                    addMessageToChat("Sistem", "Anda harus masuk terlebih dahulu untuk membuat sidang.", false);
+                    return;
+                }
+                // Only allow creating room if user's default role is Penggugat
+                if (userDefaultRole !== "Penggugat") {
+                    addMessageToChat("Sistem", "Maaf, hanya pengguna dengan peran Penggugat yang dapat membuat sidang baru.", false);
+                    return;
+                }
+
+                $('#room-selection-section').addClass('hidden');
+                $('#create-scenario-section').removeClass('hidden');
+            });
+
+            $('#join-room-button').on('click', async function() {
+                if (!userId) {
+                    addMessageToChat("Sistem", "Anda harus masuk terlebih dahulu untuk bergabung sidang.", false);
+                    return;
+                }
+                const roomId = $('#join-room-id').val().trim();
+                if (roomId === '') {
+                    addMessageToChat("Sistem", "Mohon masukkan ID sidang.", false);
+                    return;
+                }
+                await joinExistingRoom(roomId);
+            });
+
+            // --- SCENARIO CREATION EVENT HANDLER ---
+            $('#submit-new-scenario-button').on('click', async function() {
+                const scenario = $('#new-scenario-input').val().trim();
+                if (scenario === '') {
+                    $('#new-scenario-input').addClass('border-red-500');
+                    setTimeout(() => {
+                        $('#new-scenario-input').removeClass('border-red-500');
+                    }, 2000);
+                    addMessageToChat("Sistem", "Mohon masukkan skenario perkara sebelum membuat sidang.", false);
+                    return;
+                }
+                currentScenario = scenario;
+                await createNewRoom(scenario);
+            });
+
+            // --- TRIAL INTERFACE EVENT HANDLERS ---
+            // Role selection logic (now primarily for display and initial assignment in joined rooms)
+            $('.role-button').on('click', async function() {
+                if ($(this).prop('disabled')) { // If button is disabled, prevent action
+                    if (selectedRole) {
+                         addMessageToChat("Sistem", `Peran Anda sudah ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
+                    } else if (!userId) {
+                        addMessageToChat("Sistem", "Anda harus masuk terlebih dahulu.", false);
+                    } else if (!currentRoomId) {
+                        addMessageToChat("Sistem", "Anda harus berada di dalam sidang untuk memilih peran.", false);
+                    } else { // It means "Penggugat" button might be disabled because it's already taken
+                         addMessageToChat("Sistem", "Peran ini tidak tersedia atau sudah diambil.", false);
+                    }
+                    return;
+                }
+                
+                const newRole = $(this).data('role');
+
+                if (selectedRole) { // If a role is already chosen for this room (should be disabled but as a fallback)
+                    addMessageToChat("Sistem", `Peran Anda untuk sidang ini sudah ditetapkan sebagai ${selectedRole}. Anda tidak bisa mengubahnya.`, false);
+                    return;
+                }
+                
+                // Assign role for this specific room
+                try {
+                    const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
+                    await setDoc(userRoomRoleRef, { role: newRole });
+                    selectedRole = newRole; // Update local state
+                    addMessageToChat("Sistem", `Peran Anda telah ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
+                } catch (error) {
+                    console.error("Error setting role for room:", error);
+                    addMessageToChat("Sistem", `Gagal menetapkan peran: ${error.message}.`, false);
+                }
+                updateUIBasedOnAuthAndRole(); // Re-evaluate UI based on new role assignment
+            });
+
+            // Handle statement submission (main conversational flow)
+            $('#submit-statement-button').on('click', async function() {
+                if (!selectedRole) {
+                    addMessageToChat("Sistem", "Pilih peran Anda terlebih dahulu!", false);
+                    return;
+                }
+                if (selectedRole === "Panitera") {
+                    addMessageToChat("Sistem", "Sebagai Panitera, Anda tidak berpartisipasi langsung dalam argumen persidangan. Anda dapat menggunakan fitur 'Ringkas Persidangan' untuk melihat catatan.", false);
+                    $('#statement-input').val('');
+                    return;
+                }
+
+                const userStatement = $('#statement-input').val().trim();
+                if (userStatement === '') {
+                    $('#statement-input').addClass('border-red-500');
+                    setTimeout(() => { $('#statement-input').removeClass('border-red-500'); }, 2000);
+                    return;
+                }
+
+                if (selectedRole !== currentSpeaker) {
+                    addMessageToChat("Sistem", `Maaf, saat ini giliran <span class="font-bold text-red-600">${currentSpeaker}</span> berbicara. Silakan tunggu giliran Anda.`, false);
+                    $('#statement-input').val('');
+                    return;
+                }
+
+                // Add to Firestore and it will reflect in UI via snapshot listener
+                await addDoc(collection(db, 'artifacts', __app_id, 'public', 'rooms', currentRoomId, 'chatMessages'), {
+                    role: selectedRole,
+                    text: userStatement,
+                    isUser: true,
+                    timestamp: serverTimestamp()
+                });
+                $('#statement-input').val(''); // Clear after sending
+
+                const formattedChatHistoryForLLM = chatHistory.map(msg => ({
+                    role: msg.role.startsWith('Hakim') ? 'model' : 'user',
+                    parts: [{ text: `${msg.role}: ${msg.text}` }]
+                }));
+
+                const llmPrompt = `
+                    Anda adalah asisten AI yang mensimulasikan peradilan semu hukum acara perdata.
+                    Skenario kasus saat ini adalah: "${currentScenario}"
+                    Anda harus merespons sebagai 'Hakim', 'Penggugat', 'Tergugat', atau 'Saksi' berdasarkan konteks dan peran yang sedang berbicara.
+                    Prioritas utama Anda adalah merespons sebagai "Hakim" dan selalu mengarahkan siapa yang harus berbicara selanjutnya.
+                    Setelah Anda memberikan respons sebagai Hakim, tentukan siapa yang harus berbicara selanjutnya (Penggugat, Tergugat, Saksi, atau Panitera jika ada peran aktif lainnya yang perlu dicatat, atau kembali ke Hakim jika tidak ada yang spesifik) dan sebutkan nama peran tersebut di awal kalimat respons Anda sebagai Hakim, misalnya: "Hakim (untuk Penggugat): Saudara Penggugat, silakan...", atau "Hakim (untuk Tergugat): Saudara Tergugat, ...". Jika Anda tidak menunjuk siapa pun, defaultkan menjadi 'Hakim'.
+                    Tujuan Anda adalah menjaga alur persidangan dan memberikan respons yang relevan dengan hukum acara perdata.
+                    Pertahankan respons Anda singkat, relevan, dan dalam bahasa Indonesia.
+                    Berikut adalah riwayat percakapan sejauh ini:
+                    ${formattedChatHistoryForLLM.map(c => `${c.role}: ${c.parts[0].text}`).join('\n')}
+
+                    Berdasarkan pernyataan terakhir dari ${selectedRole}: "${userStatement}", bagaimana Anda akan melanjutkan persidangan atau merespons sebagai peran yang paling sesuai (prioritaskan Hakim untuk mengarahkan)?
+                `;
+                
+                await callGeminiApi(llmPrompt, false);
+            });
+
+            // Handle Summarize button click
+            $('#summarize-button').on('click', async function() {
+                if (!selectedRole) {
+                    addMessageToChat("Sistem", "Pilih peran Anda terlebih dahulu untuk menggunakan fitur ini.", false);
+                    return;
+                }
+                if (!currentRoomId) {
+                    addMessageToChat("Sistem", "Anda harus berada di dalam sidang untuk menggunakan fitur ini.", false);
+                    return;
+                }
+
+                const chatContent = chatHistory.map(entry => `${entry.role}: ${entry.text}`).join('\n');
+                const summarizePrompt = `
+                    Skenario kasus saat ini adalah: "${currentScenario}"
+                    Ringkaslah poin-poin utama dan perkembangan sengketa perdata berikut secara singkat, padat, dan jelas. Fokus pada inti argumen dan pernyataan penting yang telah disampaikan.
+                    Riwayat persidangan:
+                    ${chatContent}
+                `;
+                
+                await callGeminiApi(summarizePrompt, true);
+            });
+
+            // Handle Suggest Questions button click
+            $('#suggest-questions-button').on('click', async function() {
+                if (!selectedRole) {
+                    addMessageToChat("Sistem", "Pilih peran Anda terlebih dahulu untuk menggunakan fitur ini.", false);
+                    return;
+                }
+                if (!currentRoomId) {
+                    addMessageToChat("Sistem", "Anda harus berada di dalam sidang untuk menggunakan fitur ini.", false);
+                    return;
+                }
+                // Panitera does not ask questions in the trial context, so disable this feature for them.
+                if (selectedRole === "Panitera") {
+                    addMessageToChat("Sistem", "Sebagai Panitera, Anda tidak mengajukan pertanyaan di persidangan. Fitur ini hanya untuk pihak yang berargumen.", false);
+                    return;
+                }
+
+                const lastFewMessages = chatHistory.slice(-5).map(entry => `${entry.role}: ${entry.text}`).join('\n');
+                const suggestPrompt = `
+                    Saya adalah ${selectedRole}. Skenario kasus saat ini adalah: "${currentScenario}"
+                    Berdasarkan percakapan terakhir ini:
+                    ${lastFewMessages}
+                    Tolong berikan 2-3 saran pertanyaan relevan yang bisa saya ajukan dalam persidangan ini, sesuai dengan peran saya dan konteks hukum acara perdata. Formatlah sebagai daftar.
+                `;
+
+                await callGeminiApi(suggestPrompt, true);
+            });
+        });
+    </script>
+</body>
+</html>
