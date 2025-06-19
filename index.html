@@ -265,11 +265,11 @@
                             <span class="text-3xl sm:text-4xl">👩‍💼</span>
                             <span class="mt-1 sm:mt-2 font-medium text-gray-700">Tergugat</span>
                         </button>
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Saksi" disabled>
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Saksi" disabled>
                             <span class="text-3xl sm:text-4xl">🗣️</span>
                             <span class="mt-1 sm:mt-2 font-medium text-gray-700">Saksi</span>
                         </button>
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Panitera" disabled>
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Panitera" disabled>
                             <span class="text-3xl sm:text-4xl">📝</span>
                             <span class="mt-1 sm:mt-2 font-medium text-gray-700">Panitera</span>
                         </button>
@@ -862,82 +862,91 @@
             roomParticipantsListDiv.html('<p class="text-gray-500 text-center text-sm">Memuat peserta...</p>');
 
             // Listen to all user's roomRoles for this roomId to get participants
-            const roomRolesCollectionRef = collection(db, 'artifacts', __app_id, 'users');
-            const q = query(roomRolesCollectionRef); // We need to query all users and then filter their roomRoles
+            const usersCollectionRef = collection(db, 'artifacts', __app_id, 'users');
+            const userProfilesPromises = [];
+            const allRoles = ["Hakim", "Penggugat", "Tergugat", "Saksi", "Panitera"]; // Include Hakim for assignments
 
-            // Unsubscribe from previous listener if any
-            if (unsubscribeFromRoomParticipants) {
-                unsubscribeFromRoomParticipants();
+            // Fetch all users' profiles to get their emails
+            const allUsersSnapshot = await getDocs(usersCollectionRef);
+            const userEmailMap = {};
+            allUsersSnapshot.forEach(userDoc => {
+                const profileData = userDoc.data().profile?.data;
+                if (profileData && profileData.email) {
+                    userEmailMap[userDoc.id] = profileData.email;
+                }
+            });
+
+
+            // Now, get room-specific roles for all users in this room
+            // We need to query the 'roomRoles' subcollection across ALL users for this specific room
+            // Firebase doesn't allow collection group queries for subcollections across specific parents easily
+            // So we'll have to iterate over all users and check their roomRoles subcollection for the currentRoomId.
+            
+            const participantsInRoom = [];
+            for (const user of allUsersSnapshot.docs) {
+                const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', user.id, 'roomRoles', roomId);
+                const userRoomRoleSnap = await getDoc(userRoomRoleRef);
+
+                if (userRoomRoleSnap.exists()) {
+                    participantsInRoom.push({
+                        uid: user.id,
+                        email: userEmailMap[user.id] || "Email tidak diketahui",
+                        assignedRole: userRoomRoleSnap.data().role || 'Belum ditetapkan'
+                    });
+                }
             }
 
-            unsubscribeFromRoomParticipants = onSnapshot(q, async (querySnapshot) => {
-                const participants = [];
-                const assignedUsers = Object.values(roomAssignedRoles);
-                const allRoles = ["Penggugat", "Tergugat", "Saksi", "Panitera", "Hakim"];
 
-                for (const userDoc of querySnapshot.docs) {
-                    const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userDoc.id, 'roomRoles', roomId);
-                    const userRoomRoleSnap = await getDoc(userRoomRoleRef);
+            roomParticipantsListDiv.empty();
+            if (participantsInRoom.length === 0) {
+                roomParticipantsListDiv.html('<p class="text-gray-500 text-center text-sm">Belum ada peserta lain di sidang ini.</p>');
+                return;
+            }
 
-                    if (userRoomRoleSnap.exists()) {
-                        const participantRole = userRoomRoleSnap.data().role;
-                        const participantEmail = userDoc.data().profile?.data?.email || "Email tidak diketahui";
-                        
-                        participants.push({
-                            uid: userDoc.id,
-                            email: participantEmail,
-                            assignedRole: participantRole || 'Belum ditetapkan'
-                        });
-                    }
-                }
+            participantsInRoom.forEach(participant => {
+                // Don't show the Hakim themselves in the list for assignment
+                if (participant.uid === userId) return; 
 
-                roomParticipantsListDiv.empty();
-                if (participants.length === 0) {
-                    roomParticipantsListDiv.html('<p class="text-gray-500 text-center text-sm">Belum ada peserta lain di sidang ini.</p>');
-                    return;
-                }
-
-                participants.forEach(participant => {
-                    // Don't show the Hakim themselves in the list for assignment
-                    if (participant.uid === userId) return; 
-
-                    let availableRolesForAssignment = allRoles.filter(role => !roomAssignedRoles[role] || roomAssignedRoles[role] === participant.uid);
-                    
-                    // Do not allow reassigning Hakim if it's already assigned and not to this user
-                    if (roomAssignedRoles["Hakim"] && roomAssignedRoles["Hakim"] !== userId && roomAssignedRoles["Hakim"] !== participant.uid) {
+                let availableRolesForAssignment = allRoles.filter(role => {
+                    // Role is available if nobody has it OR if the current participant already has it
+                    return !roomAssignedRoles[role] || roomAssignedRoles[role] === participant.uid;
+                });
+                
+                // Special rules for Hakim and Penggugat roles
+                const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
+                getDoc(roomRef).then(roomSnap => {
+                    // If Hakim role is taken by someone else, it's not available for assignment
+                    if (roomAssignedRoles["Hakim"] && roomAssignedRoles["Hakim"] !== participant.uid) {
                         availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Hakim");
                     }
-                    // Prevent assigning Penggugat if room creator is Penggugat and it's someone else
-                    const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
-                    getDoc(roomRef).then(roomSnap => {
-                        if (roomSnap.exists() && roomSnap.data().createdBy === roomAssignedRoles["Penggugat"] && participant.uid !== roomSnap.data().createdBy) {
-                             availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Penggugat");
-                        }
-                        
-                        const participantHtml = `
-                            <div class="p-2 border border-gray-200 rounded-lg bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm">
-                                <div>
-                                    <p class="font-semibold text-gray-800">${participant.email} (${participant.uid.substring(0,4)}...)</p>
-                                    <p class="text-gray-600 text-xs">Peran: <span class="font-medium">${participant.assignedRole}</span></p>
-                                </div>
-                                <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
-                                    ${availableRolesForAssignment.map(role => `
-                                        <button class="assign-role-btn bg-blue-500 text-white px-2 py-1 rounded-md text-xs hover:bg-blue-600"
-                                            data-target-uid="${participant.uid}" data-target-role="${role}">
-                                            Tetapkan ${role}
-                                        </button>
-                                    `).join('')}
-                                    ${participant.assignedRole !== 'Belum ditetapkan' && participant.assignedRole !== 'Hakim (AI)' ? `
-                                    <button class="unassign-role-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600"
-                                            data-target-uid="${participant.uid}" data-target-role="${participant.assignedRole}">
-                                            Batal Tetapkan ${participant.assignedRole}
-                                        </button>
-                                    ` : ''}
-                                </div>
+                    // If Penggugat role is taken by room creator (and it's not this participant), it's not available
+                    if (roomSnap.exists() && roomSnap.data().createdBy === roomAssignedRoles["Penggugat"] && participant.uid !== roomSnap.data().createdBy) {
+                         availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Penggugat");
+                    }
+                    
+                    const participantHtml = `
+                        <div class="p-2 border border-gray-200 rounded-lg bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm">
+                            <div>
+                                <p class="font-semibold text-gray-800">${participant.email} <span class="text-gray-500 text-xs">(${participant.uid.substring(0,4)}...)</span></p>
+                                <p class="text-gray-600 text-xs mt-1">Peran: <span class="font-medium">${participant.assignedRole}</span></p>
                             </div>
-                        `;
-                        roomParticipantsListDiv.append(participantHtml);
-                    });
+                            <div class="flex flex-wrap gap-1 mt-2 sm:mt-0">
+                                ${availableRolesForAssignment.map(role => `
+                                    <button class="assign-role-btn bg-blue-500 text-white px-2 py-1 rounded-md text-xs hover:bg-blue-600"
+                                        data-target-uid="${participant.uid}" data-target-role="${role}">
+                                        Tetapkan ${role}
+                                    </button>
+                                `).join('')}
+                                ${participant.assignedRole !== 'Belum ditetapkan' && participant.assignedRole !== 'Hakim (AI)' && !roomAssignedRoles[participant.assignedRole] === participant.uid ? `
+                                <button class="unassign-role-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600"
+                                        data-target-uid="${participant.uid}" data-target-role="${participant.assignedRole}">
+                                        Batal ${participant.assignedRole}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                    roomParticipantsListDiv.append(participantHtml);
                 });
 
                 // Attach event handlers for assign/unassign buttons after rendering
@@ -971,30 +980,26 @@
             const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'joinedRooms', currentRoomId);
 
             try {
-                let currentAssignedRoles = roomAssignedRoles; // Use locally cached map
+                let currentAssignedRoles = { ...roomAssignedRoles }; // Make a copy
 
-                // Check if role is already assigned to someone else
-                let roleAlreadyTakenBy = null;
-                for (const roleKey in currentAssignedRoles) {
-                    if (currentAssignedRoles[roleKey] === targetUid) {
-                        // This user already has a role. If it's the same, do nothing.
-                        if (roleKey === targetRole) {
-                            addMessageToChat("Sistem", `Pengguna ini sudah menjadi ${targetRole}.`, false);
-                            return;
-                        }
-                        // If they have a different role, first unassign the old one
-                        delete currentAssignedRoles[roleKey];
-                        addMessageToChat("Sistem", `${targetUid.substring(0,4)}... kini tidak lagi ${roleKey}.`, false);
-                        break;
-                    }
-                }
-
+                // Check if the target role is already taken by someone else
                 if (currentAssignedRoles[targetRole] && currentAssignedRoles[targetRole] !== targetUid) {
-                    roleAlreadyTakenBy = currentAssignedRoles[targetRole];
-                    addMessageToChat("Sistem", `Peran ${targetRole} sudah diambil oleh ${roleAlreadyTakenBy.substring(0,4)}.... Silakan batalkan penetapan terlebih dahulu.`, false);
+                    addMessageToChat("Sistem", `Peran ${targetRole} sudah diambil oleh ${currentAssignedRoles[targetRole].substring(0,4)}.... Silakan batalkan penetapan terlebih dahulu.`, false);
                     return;
                 }
 
+                // If target user already has a different role, remove that assignment first
+                let oldRoleOfTargetUser = null;
+                for (const roleKey in currentAssignedRoles) {
+                    if (currentAssignedRoles[roleKey] === targetUid) {
+                        oldRoleOfTargetUser = roleKey;
+                        delete currentAssignedRoles[roleKey];
+                        // Also update their userRoomRole in Firestore to null, will be set to new role next
+                        await deleteDoc(doc(db, 'artifacts', __app_id, 'users', targetUid, 'roomRoles', currentRoomId));
+                        break;
+                    }
+                }
+                
                 // Assign the new role
                 currentAssignedRoles[targetRole] = targetUid;
 
@@ -1007,7 +1012,7 @@
                 // Update user's joinedRooms entry
                 await updateDoc(joinedRoomRef, { role: targetRole, lastAccessed: serverTimestamp() });
 
-                addMessageToChat("Sistem", `Hakim: Menetapkan ${targetUid.substring(0,4)}... sebagai ${targetRole}.`, false);
+                addMessageToChat("Sistem", `Hakim: Menetapkan ${userEmailMap[targetUid] || targetUid.substring(0,4)}... sebagai ${targetRole}.`, false);
                 updateUIBasedOnAuthAndRole(); // Re-evaluate UI for everyone
 
             } catch (error) {
@@ -1027,7 +1032,7 @@
             const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'joinedRooms', currentRoomId);
 
             try {
-                let currentAssignedRoles = roomAssignedRoles;
+                let currentAssignedRoles = { ...roomAssignedRoles };
 
                 if (currentAssignedRoles[targetRole] !== targetUid) {
                     addMessageToChat("Sistem", `Pengguna ini bukan ${targetRole}.`, false);
@@ -1040,7 +1045,7 @@
                 await deleteDoc(userRoomRoleRef); // Remove user's role for this room
                 await updateDoc(joinedRoomRef, { role: null, lastAccessed: serverTimestamp() }); // Clear role in history
 
-                addMessageToChat("Sistem", `Hakim: Membatalkan penetapan ${targetRole} dari ${targetUid.substring(0,4)}....`, false);
+                addMessageToChat("Sistem", `Hakim: Membatalkan penetapan ${targetRole} dari ${userEmailMap[targetUid] || targetUid.substring(0,4)}....`, false);
                 updateUIBasedOnAuthAndRole();
 
             } catch (error) {
@@ -1060,10 +1065,11 @@
                 unsubscribeFromSpeaker();
                 unsubscribeFromSpeaker = null;
             }
-            if (unsubscribeFromRoomParticipants) { // Also unsubscribe Hakim's listener
-                unsubscribeFromRoomParticipants();
-                unsubscribeFromRoomParticipants = null;
-            }
+            // Participants listener is managed directly in loadRoomParticipantsForHakim/updateUIBasedOnAuthAndRole
+            // if (unsubscribeFromRoomParticipants) { 
+            //     unsubscribeFromRoomParticipants();
+            //     unsubscribeFromRoomParticipants = null;
+            // }
 
             // Listen to chat messages
             const chatCollectionRef = collection(db, 'artifacts', __app_id, 'rooms', roomId, 'chatMessages'); 
@@ -1099,12 +1105,16 @@
             });
 
             // Listen to room document for assignedRoles changes (important for Hakim panel and all clients)
+            // This listener is crucial for Hakim panel updates
             const roomDocRef = doc(db, 'artifacts', __app_id, 'rooms', roomId);
+            if (unsubscribeFromRoomParticipants) {
+                unsubscribeFromRoomParticipants();
+            }
             unsubscribeFromRoomParticipants = onSnapshot(roomDocRef, (roomSnap) => {
                 if (roomSnap.exists()) {
                     roomAssignedRoles = roomSnap.data().assignedRoles || {};
                     // If current user is Hakim, re-render Hakim panel to show updated assignments
-                    if (selectedRole === 'Hakim') {
+                    if (selectedRole === 'Hakim') { // Check current role *locally*
                         loadRoomParticipantsForHakim(roomId); // Re-render the participant list
                     }
                     updateUIBasedOnAuthAndRole(); // Ensure everyone's role display and button states are correct
@@ -1113,6 +1123,31 @@
                 console.error("Error listening to room document (assigned roles):", error);
             });
         }
+
+        // Global map to store user UIDs and their emails/display names
+        // Used by Hakim panel to display user emails instead of just UIDs
+        let userEmailMap = {};
+
+        // Fetch all user profiles to build the email map
+        async function fetchAllUserProfiles() {
+            const usersCollectionRef = collection(db, 'artifacts', __app_id, 'users');
+            const q = query(usersCollectionRef); // Query the main users collection
+
+            try {
+                const querySnapshot = await getDocs(q);
+                userEmailMap = {}; // Reset map
+                querySnapshot.forEach(userDoc => {
+                    const profileData = userDoc.data().profile?.data;
+                    if (profileData && profileData.email) {
+                        userEmailMap[userDoc.id] = profileData.email;
+                    }
+                });
+                console.log("User email map built:", userEmailMap);
+            } catch (error) {
+                console.error("Error fetching all user profiles:", error);
+            }
+        }
+
 
         // --- JQUERY READY BLOCK ---
         $(document).ready(function() {
@@ -1131,6 +1166,9 @@
             app = initializeApp(firebaseConfig);
             db = getFirestore(app);
             auth = getAuth(app);
+
+            // Fetch all user profiles once on app load
+            fetchAllUserProfiles();
 
             // Firebase Auth State Listener - Central point for UI updates
             onAuthStateChanged(auth, async (user) => {
@@ -1210,6 +1248,8 @@
                     $('#register-password').val('');
                     $('#register-confirm-password').val('');
                     $('input[name="register-role"]').prop('checked', false);
+                    // Refresh userEmailMap after new user registration
+                    await fetchAllUserProfiles();
                 } catch (error) {
                     let errorMessage = "Terjadi kesalahan saat pendaftaran.";
                     if (error.code === 'auth/email-already-in-use') {
