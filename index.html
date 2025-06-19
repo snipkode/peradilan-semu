@@ -3,354 +3,670 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulasi Peradilan Semu Hukum Acara Perdata</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Simulasi Hukum Acara Perdata</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- jQuery CDN -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <!-- Inter Font from Google Fonts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
-        }
-        .container {
-            max-width: 90%; /* Adjust as needed for larger screens */
-            margin: 0 auto;
-            padding: 1.5rem; /* Reduced padding */
-        }
-        .chat-bubble {
-            max-width: 80%;
-            border-radius: 0.75rem; /* rounded-xl */
-            padding: 0.75rem 1rem; /* p-3 px-4 */
-            margin-bottom: 0.75rem; /* mb-3 */
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); /* shadow-sm */
-        }
-        .chat-bubble.user {
-            background-color: #d1fae5; /* green-100 */
-            align-self: flex-end; /* ml-auto */
-        }
-        .chat-bubble.system {
-            background-color: #e0f2fe; /* blue-100 */
-            align-self: flex-start; /* mr-auto */
-        }
-        /* Custom scrollbar for chat area */
-        .chat-area::-webkit-scrollbar {
-            width: 8px;
-        }
-        .chat-area::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        .chat-area::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        .chat-area::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-        .loading-spinner {
-            border: 4px solid #f3f3f3; /* Light grey */
-            border-top: 4px solid #3498db; /* Blue */
+        body { font-family: 'Inter', sans-serif; }
+        .view { display: none; }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            display: none; /* Hidden by default */
-            margin: 0.5rem auto;
         }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .role-selected {
-            border: 2px solid #2563eb; /* blue-600 */
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5); /* ring-2 ring-blue-500 */
-        }
-
-        /* Responsive adjustments */
-        @media (min-width: 768px) {
-            .container {
-                max-width: 70%;
-            }
-        }
-        @media (min-width: 1024px) {
-            .container {
-                max-width: 60%;
-            }
-        }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
-    <div class="container bg-white p-6 rounded-xl shadow-lg flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
-        <!-- Left Panel: Scenario, Role Selection -->
-        <div class="lg:w-1/2 flex flex-col space-y-6">
-            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Simulasi Peradilan Semu</h2>
-                <p class="text-gray-700 leading-relaxed mb-4">Selamat datang di aplikasi simulasi peradilan semu hukum acara perdata. Aplikasi ini akan membantu Anda memahami dinamika persidangan dengan memainkan peran yang berbeda.</p>
-                <div class="mt-4 p-4 bg-white rounded-lg border border-gray-300">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Skenario Kasus:</h3>
-                    <p class="text-gray-600 text-sm">
-                        Sebuah sengketa perdata antara Bapak Budi (Penggugat) dan Ibu Siti (Tergugat) mengenai wanprestasi perjanjian sewa-menyewa rumah. Bapak Budi mengklaim Ibu Siti belum membayar sewa selama 3 bulan, sementara Ibu Siti menyatakan rumah tersebut tidak layak huni dan Bapak Budi tidak pernah melakukan perbaikan.
-                    </p>
-                </div>
-            </div>
+<body class="bg-gray-50">
 
-            <!-- Role Selection -->
-            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
-                <h3 class="text-xl font-bold text-gray-800 mb-4">Pilih Peran Anda:</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:bg-blue-50 transition duration-200 border border-gray-300" data-role="Hakim">
-                        <span class="text-4xl">👨‍⚖️</span>
-                        <span class="mt-2 text-md font-medium text-gray-700">Hakim</span>
+    <div id="loader-container" class="fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+        <div class="loader"></div>
+    </div>
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <div id="error-container" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 hidden" role="alert">
+            <span id="error-message" class="block sm:inline"></span>
+            <span id="close-error" class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer">
+                <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+            </span>
+        </div>
+
+        <!-- Auth View -->
+        <div id="auth-view" class="view">
+             <div class="max-w-md mx-auto mt-10 bg-white p-8 rounded-xl shadow-lg">
+                <h1 class="text-3xl font-bold text-center text-gray-800 mb-2">Simulasi Hukum Acara Perdata</h1>
+                <p id="auth-title" class="text-center text-gray-500 mb-8">Login ke Akun Anda</p>
+                <form id="auth-form">
+                    <div id="register-fields" class="hidden">
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="nama">Nama Lengkap</label>
+                            <input id="nama" type="text" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2" for="role">Daftar sebagai</label>
+                            <select id="role" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="penggugat">Penggugat</option>
+                                <option value="tergugat">Tergugat</option>
+                                <option value="hakim">Hakim</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="email">Email</label>
+                        <input id="email" type="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="password">Password</label>
+                        <input id="password" type="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500" required />
+                    </div>
+                    <button id="auth-submit-btn" type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-200">
+                        Login
                     </button>
-                    <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:bg-blue-50 transition duration-200 border border-gray-300" data-role="Penggugat">
-                        <span class="text-4xl">👨‍💼</span>
-                        <span class="mt-2 text-md font-medium text-gray-700">Penggugat</span>
+                </form>
+                <p class="text-center text-sm text-gray-600 mt-6">
+                    <span id="auth-toggle-text">Belum punya akun?</span>
+                    <button id="auth-toggle-btn" class="font-bold text-blue-600 hover:text-blue-800 ml-1">
+                        Daftar di sini
                     </button>
-                    <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:bg-blue-50 transition duration-200 border border-gray-300" data-role="Tergugat">
-                        <span class="text-4xl">👩‍💼</span>
-                        <span class="mt-2 text-md font-medium text-gray-700">Tergugat</span>
-                    </button>
-                    <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:bg-blue-50 transition duration-200 border border-gray-300" data-role="Saksi">
-                        <span class="text-4xl">🗣️</span>
-                        <span class="mt-2 text-md font-medium text-gray-700">Saksi</span>
-                    </button>
-                </div>
-                <p id="selected-role-display" class="mt-4 text-center text-lg font-medium text-gray-700">
-                    Peran terpilih: <span class="font-semibold text-blue-600">Belum dipilih</span>
                 </p>
             </div>
         </div>
 
-        <!-- Right Panel: Chat Interface -->
-        <div class="lg:w-1/2 flex flex-col space-y-6">
-            <div class="flex-grow bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col">
-                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Jalannya Persidangan</h2>
-                <div id="chat-area" class="chat-area flex-grow bg-white p-4 rounded-lg border border-gray-300 overflow-y-auto mb-4" style="height: 400px;">
-                    <!-- Chat messages will appear here -->
-                    <div class="chat-bubble system mr-auto">
-                        <p class="text-sm text-gray-800"><span class="font-semibold text-blue-700">Hakim:</span> Selamat datang di persidangan kasus perdata nomor 123/Pdt.G/2025/PN Jkt. Selatan. Sidang hari ini adalah pemeriksaan awal. Saudara Penggugat, silakan sampaikan gugatan Anda.</p>
+        <!-- Dashboard View -->
+        <div id="dashboard-view" class="view">
+            <div class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 id="dashboard-title" class="text-2xl md:text-3xl font-bold text-gray-800">Dashboard</h1>
+                        <p id="dashboard-welcome" class="text-gray-500">Selamat datang</p>
+                    </div>
+                    <button id="logout-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">Logout</button>
+                </div>
+                
+                <div id="gugatan-form-container" class="mb-6 hidden">
+                    <button id="toggle-gugatan-form-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                        + Daftarkan Gugatan Baru
+                    </button>
+                    <div id="pendaftaran-form-wrapper" class="hidden mt-4 p-4 border-t">
+                        <h3 class="text-lg font-semibold mb-2">Formulir Gugatan</h3>
+                        <form id="pendaftaran-form">
+                            <div class="mb-4">
+                                <label for="posita" class="block text-sm font-medium text-gray-700">Posita (Dasar Gugatan)</label>
+                                <textarea id="posita" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required></textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label for="petitum" class="block text-sm font-medium text-gray-700">Petitum (Tuntutan)</label>
+                                <textarea id="petitum" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" required></textarea>
+                            </div>
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Kirim Gugatan</button>
+                        </form>
                     </div>
                 </div>
 
-                <div class="loading-spinner" id="loading-spinner"></div>
-
-                <div class="mt-auto">
-                    <label for="statement-input" class="block text-md font-medium text-gray-700 mb-2">Pernyataan Anda:</label>
-                    <textarea id="statement-input" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y" placeholder="Ketik pernyataan Anda di sini..."></textarea>
-                    <button id="submit-statement-button" class="mt-4 w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                        Kirim Pernyataan
-                    </button>
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">Daftar Perkara Anda</h2>
+                <div id="perkara-list" class="space-y-4">
+                    <p class="text-gray-500 italic">Memuat data perkara...</p>
                 </div>
             </div>
         </div>
+        
+        <!-- Detail View -->
+        <div id="detail-view" class="view">
+            <!-- Content will be rendered here by JavaScript -->
+        </div>
     </div>
 
+    <!-- Firebase SDK -->
     <script type="module">
-        // Global variables for Firebase configuration, initialized later
-        let firebaseConfig = {
-            apiKey: "AIzaSyBg17cVwN2RqFHfs5UW4p9hCAym8MRPMRk",
-            authDomain: "sample-firebase-ai-app-f7271.firebaseapp.com",
-            projectId: "sample-firebase-ai-app-f7271",
-            storageBucket: "sample-firebase-ai-app-f7271.firebasestorage.app",
-            messagingSenderId: "855997436295",
-            appId: "1:855997436295:web:c9dfdeeb1309b88bc30322"
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, query, where, onSnapshot, updateDoc, arrayUnion, Timestamp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+
+        // --- Konfigurasi Firebase ---
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+ apiKey: "AIzaSyA7OXByNsv-TSx02V89XCiqrPF25q7H2PU",
+  authDomain: "e-landing.firebaseapp.com",
+  databaseURL: "https://e-landing-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "e-landing",
+  storageBucket: "e-landing.firebasestorage.app",
+  messagingSenderId: "639561118309",
+  appId: "1:639561118309:web:1c8bd83499d97369448c8c",
+  measurementId: "G-D223D9PRFH"
+            };
+
+        // --- Inisialisasi ---
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- State Management (Global Variables) ---
+        let currentUser = null;
+        let currentUserRole = null;
+        let unsubscribePerkaraListener = null;
+
+        // --- Utility Functions ---
+        const showLoader = (show) => {
+            $('#loader-container').toggle(show);
         };
-        let __app_id = 'default-app-id'; // Fallback
-        let __initial_auth_token = undefined; // Fallback
+        
+        const showError = (message) => {
+            $('#error-message').text(message);
+            $('#error-container').show();
+        };
 
-        // Initialize Firebase app and services
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        const hideError = () => {
+            $('#error-container').hide();
+        };
 
-        let app, db, auth, userId;
-        let selectedRole = null;
-        const chatHistory = [
-            { role: "Hakim", text: "Selamat datang di persidangan kasus perdata nomor 123/Pdt.G/2025/PN Jkt. Selatan. Sidang hari ini adalah pemeriksaan awal. Saudara Penggugat, silakan sampaikan gugatan Anda." }
-        ];
+        const switchView = (viewName) => {
+            $('.view').hide();
+            $(`#${viewName}`).show();
+        };
 
-        $(document).ready(function() {
-            // Check if global variables are defined by the Canvas environment
-            if (typeof window.__firebase_config !== 'undefined') {
-                firebaseConfig = JSON.parse(window.__firebase_config);
-            }
-            if (typeof window.__app_id !== 'undefined') {
-                __app_id = window.__app_id;
-            }
-            if (typeof window.__initial_auth_token !== 'undefined') {
-                __initial_auth_token = window.__initial_auth_token;
-            }
+        // --- Main Logic ---
+        $(document).ready(() => {
+            showLoader(true);
 
-            // Initialize Firebase only after the DOM is ready
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-
-            // Sign in anonymously or with custom token
+            // --- Authentication Listener ---
             onAuthStateChanged(auth, async (user) => {
+                if (unsubscribePerkaraListener) {
+                    unsubscribePerkaraListener(); // Hentikan listener lama
+                }
+
                 if (user) {
-                    userId = user.uid;
-                    console.log("Firebase initialized and user signed in:", userId);
-                    // Now that user is authenticated, you can safely interact with Firestore
-                    // For this simple app, we don't strictly need Firestore persistence for chat
-                    // but if we did, this is where we'd start fetching/listening for data.
-                } else {
-                    try {
-                        if (__initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                    } catch (error) {
-                        console.error("Error signing in:", error);
-                        // Fallback to a random ID if anonymous sign-in also fails
-                        userId = crypto.randomUUID();
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        currentUser = user;
+                        currentUserRole = userDoc.data().role;
+                        renderDashboard(currentUser, currentUserRole);
+                        listenForPerkara(currentUser, currentUserRole);
+                        switchView('dashboard-view');
+                    } else {
+                        showError("Data user tidak ditemukan. Silakan hubungi admin.");
+                        await signOut(auth);
                     }
-                    console.log("User ID:", userId);
-                    // You could potentially display the userId on the UI for multi-user scenarios
+                } else {
+                    currentUser = null;
+                    currentUserRole = null;
+                    switchView('auth-view');
                 }
+                showLoader(false);
             });
 
-            // Role selection logic
-            $('.role-button').on('click', function() {
-                $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
-                $(this).addClass('role-selected bg-blue-100');
-                selectedRole = $(this).data('role');
-                $('#selected-role-display').html(`Peran terpilih: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
-                $('#submit-statement-button').prop('disabled', false); // Enable submit button once role is selected
-                $('#statement-input').prop('disabled', false); // Enable input field
+            // --- Event Handlers ---
+            $('#close-error').on('click', hideError);
+            $('#logout-btn').on('click', async () => {
+                showLoader(true);
+                await signOut(auth);
+                // Auth listener will handle the view switch
+            });
+            
+            // Auth Form Toggle
+            let isLoginMode = true;
+            $('#auth-toggle-btn').on('click', () => {
+                isLoginMode = !isLoginMode;
+                $('#register-fields').toggle(!isLoginMode);
+                $('#auth-title').text(isLoginMode ? 'Login ke Akun Anda' : 'Buat Akun Baru');
+                $('#auth-submit-btn').text(isLoginMode ? 'Login' : 'Daftar');
+                $('#auth-toggle-text').text(isLoginMode ? 'Belum punya akun?' : 'Sudah punya akun?');
+                $('#auth-toggle-btn').text(isLoginMode ? 'Daftar di sini' : 'Login di sini');
             });
 
-            // Disable submit button and input initially
-            $('#submit-statement-button').prop('disabled', true);
-            $('#statement-input').prop('disabled', true);
-
-            // Function to add message to chat area
-            function addMessageToChat(role, text, isUser = false) {
-                const messageHtml = `
-                    <div class="chat-bubble ${isUser ? 'user ml-auto' : 'system mr-auto'}">
-                        <p class="text-sm text-gray-800"><span class="font-semibold ${isUser ? 'text-green-700' : 'text-blue-700'}">${role}:</span> ${text}</p>
-                    </div>
-                `;
-                $('#chat-area').append(messageHtml);
-                // Scroll to the bottom of the chat area
-                $('#chat-area').scrollTop($('#chat-area')[0].scrollHeight);
-            }
-
-            // Handle statement submission
-            $('#submit-statement-button').on('click', async function() {
-                if (!selectedRole) {
-                    // Replace alert with a custom message box or visual feedback
-                    $('#statement-input').val(''); // Clear the input
-                    // Example of a simple visual feedback (for demo purposes)
-                    $('#selected-role-display').css('color', 'red').text('Pilih peran Anda terlebih dahulu!');
-                    setTimeout(() => {
-                        $('#selected-role-display').css('color', '').html(`Peran terpilih: <span class="font-semibold text-blue-600">Belum dipilih</span>`);
-                    }, 3000);
-                    return;
-                }
-
-                const userStatement = $('#statement-input').val().trim();
-                if (userStatement === '') {
-                    // Replace alert with a custom message box or visual feedback
-                    $('#statement-input').addClass('border-red-500'); // Highlight empty input
-                    setTimeout(() => {
-                        $('#statement-input').removeClass('border-red-500');
-                    }, 2000);
-                    return;
-                }
-
-                addMessageToChat(selectedRole, userStatement, true);
-                chatHistory.push({ role: selectedRole, text: userStatement });
-                $('#statement-input').val(''); // Clear the input
-
-                $('#loading-spinner').show(); // Show loading spinner
-                $('#submit-statement-button').prop('disabled', true); // Disable button during API call
+            // Auth Form Submission
+            $('#auth-form').on('submit', async (e) => {
+                e.preventDefault();
+                hideError();
+                showLoader(true);
+                const email = $('#email').val();
+                const password = $('#password').val();
 
                 try {
-                    // Prepare chat history for LLM API call
-                    const formattedChatHistory = chatHistory.map(msg => ({
-                        role: msg.role === 'Hakim' ? 'model' : 'user', // Treat Hakim as model, others as user for simplicity
-                        parts: [{ text: `${msg.role}: ${msg.text}` }]
-                    }));
-
-                    // Add a system instruction or a specific prompt for the LLM
-                    const llmPrompt = `
-                        Anda adalah asisten AI yang mensimulasikan peradilan semu hukum acara perdata.
-                        Anda harus merespons sebagai 'Hakim', 'Penggugat', 'Tergugat', atau 'Saksi' berdasarkan konteks dan peran yang sedang berbicara, tetapi prioritas utama adalah menanggapi sebagai "Hakim" kecuali diminta secara spesifik oleh Penggugat/Tergugat/Saksi untuk merespons dari peran lain.
-                        Tujuan Anda adalah menjaga alur persidangan dan memberikan respons yang relevan dengan hukum acara perdata.
-                        Pertahankan respons Anda singkat, relevan, dan dalam bahasa Indonesia.
-                        Berikut adalah riwayat percakapan sejauh ini:
-                        ${formattedChatHistory.map(c => `${c.role}: ${c.parts[0].text}`).join('\n')}
-
-                        Berdasarkan pernyataan terakhir dari ${selectedRole}: "${userStatement}", bagaimana Anda akan melanjutkan persidangan atau merespons sebagai peran yang paling sesuai (prioritaskan Hakim)?
-                    `;
-
-
-                    const payload = {
-                        contents: [{ role: "user", parts: [{ text: llmPrompt }] }],
-                        generationConfig: {
-                            temperature: 0.7,
-                            topK: 40,
-                            topP: 0.95,
-                            maxOutputTokens: 200
-                        }
-                    };
-
-                    const apiKey = "AIzaSyA4p9orSNKzkVFOa0IAGca1GNqSFCg11vo"; // Canvas will automatically provide this at runtime
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const result = await response.json();
-
-                    let llmResponseText = "Maaf, saya tidak bisa memberikan respons saat ini.";
-                    let llmResponseRole = "Sistem";
-
-                    if (result.candidates && result.candidates.length > 0 &&
-                        result.candidates[0].content && result.candidates[0].content.parts &&
-                        result.candidates[0].content.parts.length > 0) {
-                        llmResponseText = result.candidates[0].content.parts[0].text;
-
-                        // Simple logic to extract role from LLM response if it starts with a known role
-                        const roles = ["Hakim", "Penggugat", "Tergugat", "Saksi"];
-                        for (const role of roles) {
-                            if (llmResponseText.startsWith(`${role}:`)) {
-                                llmResponseRole = role;
-                                llmResponseText = llmResponseText.substring(`${role}:`.length).trim();
-                                break;
-                            }
-                        }
-                        // Default to Hakim if no specific role is found at the beginning
-                        if (llmResponseRole === "Sistem") {
-                            llmResponseRole = "Hakim";
-                        }
-
+                    if (isLoginMode) {
+                        await signInWithEmailAndPassword(auth, email, password);
                     } else {
-                        console.error("Unexpected LLM response structure:", result);
+                        const nama = $('#nama').val();
+                        const role = $('#role').val();
+                        if (!nama) {
+                           showError("Nama lengkap harus diisi.");
+                           showLoader(false);
+                           return;
+                        }
+                        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                        await setDoc(doc(db, "users", userCredential.user.uid), {
+                            nama, role, email
+                        });
                     }
-
-                    addMessageToChat(llmResponseRole, llmResponseText, false);
-                    chatHistory.push({ role: llmResponseRole, text: llmResponseText });
-
                 } catch (error) {
-                    console.error("Error calling Gemini API:", error);
-                    addMessageToChat("Sistem", "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.");
+                    if (error.code === 'auth/operation-not-allowed') {
+                       showError('Error: Login dengan Email/Password belum diaktifkan. Silakan aktifkan di Firebase Console.');
+                    } else {
+                       showError(error.message);
+                    }
                 } finally {
-                    $('#loading-spinner').hide(); // Hide loading spinner
-                    $('#submit-statement-button').prop('disabled', false); // Re-enable button
+                   showLoader(false);
                 }
             });
+
+            // Gugatan Form
+            $('#toggle-gugatan-form-btn').on('click', () => {
+                $('#pendaftaran-form-wrapper').slideToggle();
+            });
+
+            $('#pendaftaran-form').on('submit', async (e) => {
+                e.preventDefault();
+                hideError();
+                showLoader(true);
+                const posita = $('#posita').val();
+                const petitum = $('#petitum').val();
+                
+                try {
+                    const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                    await addDoc(collection(db, "perkara"), {
+                        status: 'Pendaftaran',
+                        createdAt: Timestamp.now(),
+                        penggugat: {
+                            uid: currentUser.uid,
+                            nama: userDoc.data().nama,
+                            email: currentUser.email
+                        },
+                        gugatan: { posita, petitum },
+                    });
+                    $('#pendaftaran-form')[0].reset();
+                    $('#pendaftaran-form-wrapper').slideUp();
+                } catch (error) {
+                    showError("Gagal mendaftarkan gugatan: " + error.message);
+                } finally {
+                    showLoader(false);
+                }
+            });
+            
+            // Event delegation for dynamically created elements
+            $(document).on('click', '.perkara-item', function() {
+                const perkaraId = $(this).data('id');
+                renderPerkaraDetail(perkaraId);
+            });
+            
+            $(document).on('click', '#back-to-dashboard', function() {
+                switchView('dashboard-view');
+            });
+
+            $(document).on('submit', '#admin-penunjukan-form', async function(e){
+                e.preventDefault();
+                showLoader(true);
+                const perkaraId = $(this).data('id');
+                const tergugatEmail = $('#assign-tergugat').val();
+                const hakimEmail = $('#assign-hakim').val();
+                
+                // Helper to find user by email
+                const findUserByEmail = async (email, expectedRole) => {
+                    const q = query(collection(db, "users"), where("email", "==", email), where("role", "==", expectedRole));
+                    const snapshot = await getDocs(q);
+                    if (snapshot.empty) return null;
+                    const doc = snapshot.docs[0];
+                    return { uid: doc.id, ...doc.data() };
+                }
+
+                try {
+                    const tergugatUser = await findUserByEmail(tergugatEmail, 'tergugat');
+                    if (!tergugatUser) throw new Error(`Tergugat dengan email ${tergugatEmail} tidak ditemukan.`);
+                    
+                    const hakimUser = await findUserByEmail(hakimEmail, 'hakim');
+                    if (!hakimUser) throw new Error(`Hakim dengan email ${hakimEmail} tidak ditemukan.`);
+
+                    const perkaraRef = doc(db, 'perkara', perkaraId);
+                    await updateDoc(perkaraRef, {
+                        tergugat: { uid: tergugatUser.uid, nama: tergugatUser.nama, email: tergugatUser.email },
+                        hakim: { uid: hakimUser.uid, nama: hakimUser.nama, email: hakimUser.email },
+                        status: 'Mediasi'
+                    });
+                    alert('Pihak berhasil ditunjuk!');
+                    // The onSnapshot listener will auto-update the view
+                } catch (error) {
+                    showError(error.message);
+                } finally {
+                    showLoader(false);
+                }
+            });
+
+             // Add more delegated event handlers here for mediasi, bukti, etc.
+             $(document).on('submit', '#hakim-mediasi-form', async function(e){
+                e.preventDefault();
+                const perkaraId = $(this).data('id');
+                const hasil = $('#mediasi-hasil').val();
+                const catatan = $('#mediasi-catatan').val();
+                
+                const perkaraRef = doc(db, 'perkara', perkaraId);
+                await updateDoc(perkaraRef, {
+                    mediasi: { hasil, catatan },
+                    status: 'Replik'
+                });
+                alert('Hasil mediasi disimpan');
+            });
+            
+            $(document).on('submit', '.form-input-teks', async function(e){
+                e.preventDefault();
+                const perkaraId = $(this).data('id');
+                const field = $(this).data('field');
+                const nextStatus = $(this).data('next-status');
+                const text = $(this).find('textarea').val();
+                if (!text) return;
+
+                let updateData = {};
+                const fields = field.split('.');
+                if (fields.length > 1) {
+                    updateData[`${fields[0]}.${fields[1]}`] = text;
+                } else {
+                    updateData[field] = { isi: text, timestamp: Timestamp.now() };
+                }
+                
+                if (nextStatus !== "Kesimpulan") {
+                   updateData.status = nextStatus;
+                }
+                
+                const perkaraRef = doc(db, 'perkara', perkaraId);
+                await updateDoc(perkaraRef, updateData);
+                alert('Data berhasil dikirim');
+            });
+
+            $(document).on('submit', '#form-add-bukti', async function(e) {
+                e.preventDefault();
+                const perkaraId = $(this).data('id');
+                const buktiText = $('#bukti-text').val();
+                if (!buktiText) return;
+
+                const newBukti = {
+                    nama: buktiText,
+                    diajukanOleh: currentUserRole,
+                    status: 'Menunggu Persetujuan',
+                    timestamp: Timestamp.now()
+                };
+                
+                const fieldToUpdate = `bukti.${currentUserRole}`;
+                const perkaraRef = doc(db, 'perkara', perkaraId);
+
+                await updateDoc(perkaraRef, {
+                    [fieldToUpdate]: arrayUnion(newBukti)
+                });
+
+                alert('Bukti berhasil diajukan');
+                $('#bukti-text').val('');
+            });
+
+            $(document).on('click', '.btn-status-bukti', async function() {
+                const perkaraId = $(this).data('id');
+                const pihak = $(this).data('pihak');
+                const index = $(this).data('index');
+                const newStatus = $(this).data('status');
+                
+                const perkaraRef = doc(db, 'perkara', perkaraId);
+                const perkaraSnap = await getDoc(perkaraRef);
+                const perkaraData = perkaraSnap.data();
+
+                const updatedBuktiList = [...perkaraData.bukti[pihak]];
+                updatedBuktiList[index].status = newStatus;
+
+                await updateDoc(perkaraRef, {
+                    [`bukti.${pihak}`]: updatedBuktiList
+                });
+                alert('Status bukti diubah');
+            });
+
+             $(document).on('click', '.btn-lanjut-tahap', async function() {
+                const perkaraId = $(this).data('id');
+                const nextStatus = $(this).data('next-status');
+                const perkaraRef = doc(db, 'perkara', perkaraId);
+                await updateDoc(perkaraRef, { status: nextStatus });
+                alert(`Proses dilanjutkan ke tahap ${nextStatus}`);
+            });
+
+            $(document).on('submit', '#hakim-putusan-form', async function(e){
+                e.preventDefault();
+                const perkaraId = $(this).data('id');
+                const amar = $('#putusan-amar').val();
+                const isi = $('#putusan-isi').val();
+                
+                const perkaraRef = doc(db, 'perkara', perkaraId);
+                await updateDoc(perkaraRef, {
+                    putusan: { amar, isi, timestamp: Timestamp.now() }
+                });
+                alert('Putusan berhasil disimpan');
+            });
+            
+             $(document).on('click', '#print-pdf-btn', function() {
+                const perkaraId = $(this).data('id');
+                const scriptId = 'html2pdf-script';
+                const cdnUrl = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+
+                const executePrint = () => {
+                    const element = document.getElementById('perkara-content-to-print');
+                    const opt = {
+                      margin:       0.5,
+                      filename:     `perkara_${perkaraId}.pdf`,
+                      image:        { type: 'jpeg', quality: 0.98 },
+                      html2canvas:  { scale: 2 },
+                      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                    };
+                    if(window.html2pdf) {
+                        window.html2pdf().set(opt).from(element).save();
+                    }
+                };
+
+                if (document.getElementById(scriptId)) {
+                    executePrint();
+                } else {
+                    const script = document.createElement('script');
+                    script.id = scriptId;
+                    script.src = cdnUrl;
+                    script.onload = executePrint;
+                    script.onerror = () => showError("Gagal memuat pustaka PDF.");
+                    document.body.appendChild(script);
+                }
+            });
+
+
         });
+
+        // --- Rendering Functions ---
+        function renderDashboard(user, role) {
+            $('#dashboard-title').text(`Dashboard ${role.charAt(0).toUpperCase() + role.slice(1)}`);
+            $('#dashboard-welcome').text(`Selamat datang, ${user.email}`);
+            
+            if (role === 'penggugat') {
+                $('#gugatan-form-container').show();
+            } else {
+                $('#gugatan-form-container').hide();
+            }
+        }
+
+        function listenForPerkara(user, role) {
+            let q;
+            const perkaraCollection = collection(db, 'perkara');
+            
+            switch(role) {
+                case 'penggugat': q = query(perkaraCollection, where('penggugat.uid', '==', user.uid)); break;
+                case 'tergugat': q = query(perkaraCollection, where('tergugat.uid', '==', user.uid)); break;
+                case 'hakim': q = query(perkaraCollection, where('hakim.uid', '==', user.uid)); break;
+                case 'admin': q = query(perkaraCollection); break;
+                default: return;
+            }
+
+            unsubscribePerkaraListener = onSnapshot(q, (snapshot) => {
+                const perkaraList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderPerkaraList(perkaraList);
+                
+                // If detail view is open, refresh it
+                if ($('#detail-view').is(':visible')) {
+                    const currentId = $('#detail-view-content').data('id');
+                    const updatedPerkara = perkaraList.find(p => p.id === currentId);
+                    if (updatedPerkara) {
+                        // Re-render only the detail content without switching view
+                        const detailHtml = generatePerkaraDetailHtml(updatedPerkara);
+                        $('#detail-view').html(detailHtml);
+                    }
+                }
+
+            }, (error) => {
+                console.error(error);
+                showError("Gagal memuat data perkara.");
+            });
+        }
+
+        function renderPerkaraList(perkaraArray) {
+            const listContainer = $('#perkara-list');
+            listContainer.empty();
+            if (perkaraArray.length > 0) {
+                perkaraArray.forEach(p => {
+                    const itemHtml = `
+                        <div data-id="${p.id}" class="perkara-item p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-blue-600">Perkara #${p.id.substring(0, 8)}</p>
+                                <p class="text-sm text-gray-600">Penggugat: ${p.penggugat.nama}</p>
+                                <p class="text-sm text-gray-600">Tergugat: ${p.tergugat?.nama || 'Belum Ditentukan'}</p>
+                            </div>
+                            <span class="text-sm font-medium text-white bg-blue-500 px-3 py-1 rounded-full">${p.status}</span>
+                        </div>
+                    `;
+                    listContainer.append(itemHtml);
+                });
+            } else {
+                listContainer.html('<p class="text-gray-500 italic">Belum ada perkara yang terdaftar.</p>');
+            }
+        }
+
+        function generatePerkaraDetailHtml(perkara) {
+            const TAHAPAN_PROSES = ['Pendaftaran', 'Penunjukan Pihak', 'Mediasi', 'Replik', 'Duplik', 'Pembuktian', 'Kesimpulan', 'Putusan'];
+            const currentTahapIndex = TAHAPAN_PROSES.indexOf(perkara.status);
+
+            // --- Helper to create timeline ---
+            const timelineHtml = TAHAPAN_PROSES.map((tahap, index) => `
+                <div class="flex flex-col items-center w-24">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center text-white ${index <= currentTahapIndex ? 'bg-blue-600' : 'bg-gray-300'}">
+                        ${index < currentTahapIndex ? '✓' : index + 1}
+                    </div>
+                    <p class="text-xs mt-1 text-center ${index <= currentTahapIndex ? 'font-semibold text-blue-600' : 'text-gray-500'}">${tahap}</p>
+                </div>
+                ${index < TAHAPAN_PROSES.length - 1 ? `<div class="flex-1 h-1 mt-4 ${index < currentTahapIndex ? 'bg-blue-600' : 'bg-gray-300'}"></div>` : ''}
+            `).join('');
+            
+            // --- Helper to create tahap card ---
+            const createCard = (title, content, visible, form = '') => {
+                 return visible ? `
+                    <div class="border border-gray-200 rounded-lg mb-4 overflow-hidden">
+                        <div class="w-full flex justify-between items-center p-4 bg-gray-50">
+                            <h3 class="font-semibold text-lg text-gray-800">${title}</h3>
+                        </div>
+                        <div class="p-4 bg-white">
+                            ${content}
+                            ${form}
+                        </div>
+                    </div>` : '';
+            };
+            
+            // --- Card Contents & Forms ---
+            const gugatanContent = `<p><span class="font-semibold">Posita:</span> ${perkara.gugatan.posita}</p><p><span class="font-semibold">Petitum:</span> ${perkara.gugatan.petitum}</p>`;
+            
+            const pihakContent = `<p><span class="font-semibold">Penggugat:</span> ${perkara.penggugat.nama} (${perkara.penggugat.email})</p>
+                                  <p><span class="font-semibold">Tergugat:</span> ${perkara.tergugat?.nama || 'Belum Ditentukan'}</p>
+                                  <p><span class="font-semibold">Hakim:</span> ${perkara.hakim?.nama || 'Belum Ditentukan'}</p>`;
+            
+            const penunjukanForm = (currentUserRole === 'admin' && perkara.status === 'Pendaftaran') ? `
+                <form id="admin-penunjukan-form" data-id="${perkara.id}" class="mt-4 p-4 border-t bg-gray-50 rounded-b-lg">
+                    <h4 class="font-semibold mb-2">Penunjukan Pihak</h4>
+                    <div class="space-y-2">
+                        <input type="email" id="assign-tergugat" placeholder="Email Tergugat" class="w-full p-2 border rounded" required />
+                        <input type="email" id="assign-hakim" placeholder="Email Hakim" class="w-full p-2 border rounded" required />
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Tunjuk & Lanjutkan</button>
+                    </div>
+                </form>` : '';
+
+            const mediasiContent = perkara.mediasi ? `<p>Hasil: <span class="font-bold">${perkara.mediasi.hasil}</span>. Catatan: ${perkara.mediasi.catatan}</p>` : `<p class="italic">Menunggu hasil mediasi...</p>`;
+            const mediasiForm = (currentUserRole === 'hakim' && perkara.status === 'Mediasi') ? `
+                <form id="hakim-mediasi-form" data-id="${perkara.id}" class="mt-4 p-4 border-t bg-gray-50">
+                    <h4 class="font-semibold mb-2">Input Hasil Mediasi</h4>
+                    <select id="mediasi-hasil" class="w-full p-2 border rounded mb-2">
+                        <option>Berhasil</option><option>Gagal</option>
+                    </select>
+                    <textarea id="mediasi-catatan" placeholder="Catatan mediasi..." class="w-full p-2 border rounded mb-2" required></textarea>
+                    <button type="submit" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg">Simpan</button>
+                </form>` : '';
+            
+            const replikDuplikContent = `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-semibold">Replik (Penggugat)</h4>
+                        ${perkara.replik ? `<p>${perkara.replik.isi}</p>` : `<p class="italic">Belum ada replik.</p>`}
+                        ${(currentUserRole === 'penggugat' && perkara.status === 'Replik') ? `
+                            <form class="form-input-teks mt-2" data-id="${perkara.id}" data-field="replik" data-next-status="Duplik">
+                                <textarea class="w-full p-2 border rounded" rows="3" placeholder="Isi replik..." required></textarea>
+                                <button type="submit" class="bg-blue-600 text-white font-bold py-1 px-3 rounded-lg mt-1">Kirim</button>
+                            </form>` : ''}
+                    </div>
+                    <div class="border-t pt-4">
+                        <h4 class="font-semibold">Duplik (Tergugat)</h4>
+                        ${perkara.duplik ? `<p>${perkara.duplik.isi}</p>` : `<p class="italic">Belum ada duplik.</p>`}
+                        ${(currentUserRole === 'tergugat' && perkara.status === 'Duplik') ? `
+                            <form class="form-input-teks mt-2" data-id="${perkara.id}" data-field="duplik" data-next-status="Pembuktian">
+                                <textarea class="w-full p-2 border rounded" rows="3" placeholder="Isi duplik..." required></textarea>
+                                <button type="submit" class="bg-blue-600 text-white font-bold py-1 px-3 rounded-lg mt-1">Kirim</button>
+                            </form>` : ''}
+                    </div>
+                </div>`;
+            
+            // --- Final Assembly of Detail HTML ---
+            return `
+             <div id="detail-view-content" data-id="${perkara.id}" class="bg-white p-6 md:p-8 rounded-xl shadow-lg">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <button id="back-to-dashboard" class="text-blue-600 hover:underline mb-2">&larr; Kembali ke Dashboard</button>
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Detail Perkara #${perkara.id.substring(0,8)}</h1>
+                    </div>
+                    <button id="print-pdf-btn" data-id="${perkara.id}" class="bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 px-4 rounded-lg">Cetak PDF</button>
+                </div>
+
+                <div class="mb-8 overflow-x-auto pb-4"><div class="flex items-start min-w-max">${timelineHtml}</div></div>
+
+                <div id="perkara-content-to-print">
+                    ${createCard('Gugatan', gugatanContent, true)}
+                    ${createCard('Identitas Para Pihak', pihakContent, true, penunjukanForm)}
+                    ${createCard('Mediasi', mediasiContent, currentTahapIndex >= 2, mediasiForm)}
+                    ${createCard('Replik & Duplik', replikDuplikContent, currentTahapIndex >= 3)}
+                </div>
+             </div>
+            `;
+        }
+
+        function renderPerkaraDetail(perkaraId) {
+            showLoader(true);
+            const unsub = onSnapshot(doc(db, "perkara", perkaraId), (docSnap) => {
+                if (docSnap.exists()) {
+                    const perkara = { id: docSnap.id, ...docSnap.data() };
+                    const detailHtml = generatePerkaraDetailHtml(perkara);
+                    $('#detail-view').html(detailHtml);
+                    switchView('detail-view');
+                } else {
+                    showError("Perkara tidak ditemukan.");
+                    switchView('dashboard-view');
+                }
+                showLoader(false);
+            }, (error) => {
+                showError("Gagal mengambil detail perkara: " + error.message);
+                showLoader(false);
+            });
+            // Note: This listener is temporary for a single detail fetch. 
+            // The main listener `unsubscribePerkaraListener` handles continuous updates.
+        }
+
     </script>
 </body>
 </html>
