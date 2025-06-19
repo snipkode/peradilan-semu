@@ -215,7 +215,16 @@
                         Gabung Sidang
                     </button>
                 </div>
-                <button id="logout-button-room-select" class="mt-4 sm:mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 shadow-md text-sm sm:text-base">
+
+                <div class="mt-8">
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 text-center">Riwayat Sidang Anda</h3>
+                    <div id="joined-rooms-list" class="flex flex-col gap-3 max-h-64 overflow-y-auto p-2 border border-gray-300 rounded-lg bg-white">
+                        <p class="text-gray-500 text-center text-sm">Tidak ada riwayat sidang.</p>
+                        <!-- Joined rooms will be listed here -->
+                    </div>
+                </div>
+
+                <button id="logout-button-room-select" class="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 shadow-md text-sm sm:text-base">
                     Keluar
                 </button>
             </div>
@@ -248,11 +257,11 @@
                             <span class="text-3xl sm:text-4xl">👨‍⚖️</span>
                             <span class="mt-1 sm:mt-2 font-medium text-gray-700">Hakim</span>
                         </button>
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Penggugat" disabled>
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Penggugat" disabled>
                             <span class="text-3xl sm:text-4xl">👨‍💼</span>
                             <span class="mt-1 sm:mt-2 font-medium text-gray-700">Penggugat</span>
                         </button>
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Tergugat" disabled>
+                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Tergugat" disabled>
                             <span class="text-3xl sm:text-4xl">👩‍💼</span>
                             <span class="mt-1 sm:mt-2 font-medium text-gray-700">Tergugat</span>
                         </button>
@@ -279,7 +288,13 @@
                         </button>
                     </div>
                 </div>
-                <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 flex-grow">
+                <div id="hakim-management-panel" class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 flex-grow mt-6 hidden">
+                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 text-center">Pengelolaan Peran (Hakim)</h3>
+                    <div id="room-participants-list" class="flex flex-col gap-3 max-h-64 overflow-y-auto p-2 border border-gray-300 rounded-lg bg-white">
+                        <p class="text-gray-500 text-center text-sm">Memuat peserta...</p>
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 flex-grow mt-6">
                     <h3 class="text-lg sm:text-xl font-semibold text-gray-700 mb-2">Skenario Kasus Saat Ini:</h3>
                     <p id="current-scenario-display" class="text-gray-600 text-xs sm:text-sm italic">
                         <!-- Scenario will be displayed here after starting the trial -->
@@ -337,29 +352,33 @@
         // Initialize Firebase app and services
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let app, db, auth, userId;
-        let userDefaultRole = null; // New: role selected during registration
-        let selectedRole = null; // Role assigned for the current room
-        let currentSpeaker = '';
-        let chatHistory = [];
-        let currentScenario = '';
-        let currentRoomId = null;
-        let unsubscribeFromChat = null; // To store the unsubscribe function for chat snapshot listener
-        let unsubscribeFromSpeaker = null; // To store the unsubscribe function for speaker snapshot listener
+        let userDefaultRole = null; // Role selected during registration (Penggugat, Tergugat, etc.)
+        let selectedRole = null; // Role assigned for the current room (will be one of the 'official' roles)
+        let currentSpeaker = ''; // Current role whose turn it is to speak
+        let chatHistory = []; // Local cache of chat messages
+        let currentScenario = ''; // Scenario for the current room
+        let currentRoomId = null; // ID of the current active room
+        let roomAssignedRoles = {}; // Map of roles assigned in the current room: { "Penggugat": "userId1", "Tergugat": "userId2" }
 
-        // Function to update the display of the current speaker
+        // Firestore unsubscribe functions
+        let unsubscribeFromChat = null; 
+        let unsubscribeFromSpeaker = null;
+        let unsubscribeFromRoomParticipants = null; // New: for Hakim panel to see who's in the room
+
+        // Helper function to update the display of the current speaker
         function updateSpeakerDisplay() {
             $('#speaker-name').text(currentSpeaker);
             // Highlight the assigned role button if it matches the current speaker
-            $('.role-button').removeClass('role-selected border-green-600 ring-2 ring-green-500'); // Remove all highlights first
-            if (currentSpeaker && selectedRole === currentSpeaker) { // Only highlight if the user's assigned role is the current speaker
+            $('.role-button').removeClass('role-selected border-green-600 ring-2 ring-green-500'); 
+            if (currentSpeaker && selectedRole === currentSpeaker) { 
                 $(`button[data-role="${currentSpeaker}"]`).addClass('role-selected border-green-600 ring-2 ring-green-500');
             }
         }
 
-        // Function to enable/disable statement input and action buttons
+        // Helper function to enable/disable statement input and action buttons
         function setInputAndFeatureButtonsState(disabled) {
             $('#submit-statement-button').prop('disabled', disabled);
             $('#summarize-button').prop('disabled', disabled);
@@ -367,11 +386,11 @@
             $('#statement-input').prop('disabled', disabled);
         }
 
-        // Function to parse basic Markdown to HTML
+        // Helper function to parse basic Markdown to HTML for display
         function parseMarkdown(markdownText) {
             let htmlText = markdownText;
 
-            // Headers (simple # and ## for now)
+            // Headers
             htmlText = htmlText.replace(/^### (.*$)/gim, '<h3>$1</h3>');
             htmlText = htmlText.replace(/^## (.*$)/gim, '<h2>$1</h2>');
             htmlText = htmlText.replace(/^# (.*$)/gim, '<h1>$1</h1>');
@@ -385,20 +404,37 @@
             htmlText = htmlText.replace(/_(.*?)_/gim, '<em>$1</em>');
 
             // Lists (simple unordered)
-            htmlText = htmlText.replace(/^\s*\-\s(.*$)/gim, '<li>$1</li>'); // For single line items
-            // If the LLM generates multiline lists, this needs more complex parsing
-            if (htmlText.includes('<li>')) {
-                htmlText = `<ul>${htmlText}</ul>`;
+            const lines = htmlText.split('\n');
+            let inList = false;
+            let processedLines = [];
+
+            lines.forEach(line => {
+                if (line.match(/^\s*[\-\*]\s/)) { 
+                    if (!inList) {
+                        processedLines.push('<ul>');
+                        inList = true;
+                    }
+                    processedLines.push(`<li>${line.replace(/^\s*[\-\*]\s/, '')}</li>`);
+                } else {
+                    if (inList) {
+                        processedLines.push('</ul>');
+                        inList = false;
+                    }
+                    processedLines.push(line);
+                }
+            });
+            if (inList) { 
+                processedLines.push('</ul>');
             }
+            htmlText = processedLines.join('\n');
 
             // Newlines to <br> for simple line breaks within paragraphs
-            htmlText = htmlText.replace(/\n/g, '<br>');
+            htmlText = htmlText.replace(/(?<!<\/li>)\n(?!<ul)/g, '<br>');
 
             return htmlText;
         }
 
-
-        // Function to add message to chat area
+        // Helper function to add messages to the chat UI
         function addMessageToChat(role, text, isUser = false) {
             const messageHtml = `
                 <div class="chat-bubble ${isUser ? 'user ml-auto' : 'system mr-auto'}">
@@ -438,6 +474,7 @@
                     $('#create-scenario-section').addClass('hidden');
                     $('#trial-interface-section').addClass('hidden');
                     $('#user-info-room-select').text(`Masuk sebagai: ${currentUser.email}`);
+                    await loadJoinedRooms(); // Load and display joined rooms
                 } else {
                     // In a room, show trial interface
                     $('#auth-section').addClass('hidden');
@@ -445,6 +482,15 @@
                     $('#create-scenario-section').addClass('hidden');
                     $('#trial-interface-section').removeClass('hidden');
                     $('#room-id-display').text(currentRoomId);
+
+                    // Fetch current room's assigned roles (for Hakim panel and general role status)
+                    const roomDocRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
+                    const roomDocSnap = await getDoc(roomDocRef);
+                    if (roomDocSnap.exists() && roomDocSnap.data().assignedRoles) {
+                        roomAssignedRoles = roomDocSnap.data().assignedRoles;
+                    } else {
+                        roomAssignedRoles = {};
+                    }
 
                     // Fetch user's role for the current room
                     const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
@@ -457,13 +503,28 @@
                         $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
                         $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
                         $('.role-button').prop('disabled', true); 
+
+                        // Show Hakim panel if current user is Hakim
+                        if (selectedRole === 'Hakim') {
+                            $('#hakim-management-panel').removeClass('hidden');
+                            await loadRoomParticipantsForHakim(currentRoomId);
+                        } else {
+                            $('#hakim-management-panel').addClass('hidden');
+                        }
+
                     } else {
-                        // If no role saved for this room, enable selection based on default role
+                        // If no role saved for this room, user needs to pick one (or it's assigned by Hakim)
                         selectedRole = null;
                         $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>`);
                         $('.role-button').prop('disabled', false); // Enable all role buttons initially
-                        
-                        // Dynamically disable 'Penggugat' if it's not the room creator
+                        $('#hakim-management-panel').addClass('hidden'); // Not Hakim yet
+
+                        // Dynamically disable roles already assigned or 'Penggugat' if not room creator
+                        for (const roleKey in roomAssignedRoles) {
+                            if (roomAssignedRoles[roleKey]) {
+                                $(`button[data-role="${roleKey}"]`).prop('disabled', true);
+                            }
+                        }
                         const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId); 
                         const roomSnap = await getDoc(roomRef);
                         if (roomSnap.exists() && roomSnap.data().createdBy !== userId) {
@@ -486,9 +547,11 @@
                 userDefaultRole = null;
                 selectedRole = null;
                 currentRoomId = null; 
+                roomAssignedRoles = {}; // Clear assigned roles cache
                 // Unsubscribe from any active listeners on logout
                 if (unsubscribeFromChat) { unsubscribeFromChat(); unsubscribeFromChat = null; }
                 if (unsubscribeFromSpeaker) { unsubscribeFromSpeaker(); unsubscribeFromSpeaker = null; }
+                if (unsubscribeFromRoomParticipants) { unsubscribeFromRoomParticipants(); unsubscribeFromRoomParticipants = null; }
 
                 $('#auth-section').removeClass('hidden');
                 $('#room-selection-section').addClass('hidden');
@@ -521,8 +584,6 @@
                     }
                 };
 
-                // The API key is usually provided by the environment for Canvas apps.
-                // If running locally or for specific models, you might need to insert it here.
                 const apiKey = "AIzaSyA4p9orSNKzkVFOa0IAGca1GNqSFCg11vo"; // Canvas will automatically provide this at runtime
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
@@ -575,8 +636,6 @@
 
                 } else {
                     console.error("Unexpected LLM response structure:", result);
-                    // If LLM response structure is unexpected, ensure nextDirectedSpeaker is set
-                    // for proper UI state in finally block.
                     nextDirectedSpeaker = currentSpeaker;
                 }
 
@@ -586,12 +645,12 @@
                     await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { 
                         role: llmResponseRole,
                         text: llmResponseText,
-                        isUser: false, // Hakim is AI
+                        isUser: false, 
                         timestamp: serverTimestamp()
                     });
                     // Set initial speaker state in Firestore
                     await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { 
-                        speaker: "Penggugat" // After Hakim's opening, it's always the Penggugat's turn
+                        speaker: "Penggugat" 
                     });
                 } else if (isFeatureCall) {
                     addMessageToChat(llmResponseRole, llmResponseText, false); 
@@ -605,7 +664,6 @@
             } catch (error) {
                 console.error("Error calling Gemini API:", error);
                 addMessageToChat("Sistem", "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.");
-                // Fallback to Hakim in case of error in main flow
                 if (!isFeatureCall && !isInitialHakimCall) {
                     await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { 
                         speaker: "Hakim"
@@ -613,7 +671,7 @@
                 }
             } finally {
                 $('#loading-spinner').hide();
-                updateUIBasedOnAuthAndRole(); // Re-evaluate UI state
+                updateUIBasedOnAuthAndRole(); 
             }
         }
 
@@ -623,7 +681,6 @@
                 addMessageToChat("Sistem", "Anda harus masuk untuk membuat sidang baru.", false);
                 return;
             }
-            // For room creation, the creator is always Penggugat
             if (userDefaultRole && userDefaultRole !== "Penggugat") {
                 addMessageToChat("Sistem", "Untuk membuat sidang baru, Anda harus mendaftar sebagai Penggugat atau menggunakan akun Penggugat.", false);
                 return;
@@ -640,18 +697,26 @@
                     createdAt: serverTimestamp(),
                     createdBy: userId,
                     initialSpeaker: "Penggugat",
-                    penggugatId: userId // Mark creator as Penggugat for this room
+                    assignedRoles: { "Penggugat": userId } // Penggugat is creator by default
                 });
 
                 // Set creator's role for this room to Penggugat
                 const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
-                await setDoc(userRoomRoleRef, { role: "Penggugat" }); // Creator is always Penggugat for the room they create
+                await setDoc(userRoomRoleRef, { role: "Penggugat" }); 
+                selectedRole = "Penggugat"; 
 
-                selectedRole = "Penggugat"; // Update local selectedRole
+                // Save this room to user's joined history
+                const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', userId, 'joinedRooms', currentRoomId);
+                await setDoc(joinedRoomRef, {
+                    scenario: scenarioText,
+                    role: selectedRole,
+                    lastAccessed: serverTimestamp(),
+                    roomId: currentRoomId
+                });
 
                 // Initialize chat history and speaker for this new room via LLM
-                $('#chat-area').empty(); // Clear chat area
-                chatHistory = []; // Reset local chat history
+                $('#chat-area').empty(); 
+                chatHistory = []; 
 
                 const initialHakimPrompt = `
                     Sebagai Hakim di persidangan semu hukum acara perdata, mohon buka sidang untuk kasus berikut:
@@ -659,7 +724,7 @@
                     Setelah pembukaan, persilakan Penggugat untuk menyampaikan gugatannya.
                     Format respons Anda seperti ini: Hakim (untuk Penggugat): [Pesan Pembukaan dan Permintaan untuk Penggugat].
                 `;
-                await callGeminiApi(initialHakimPrompt, false, true); // isInitialHakimCall = true
+                await callGeminiApi(initialHakimPrompt, false, true); 
 
                 // Start listening to chat for the new room
                 startListeningToRoomChat(currentRoomId);
@@ -667,15 +732,15 @@
                 // Transition to trial interface
                 $('#create-scenario-section').addClass('hidden');
                 $('#trial-interface-section').removeClass('hidden');
-                updateUIBasedOnAuthAndRole(); // Update UI after setting up room
+                updateUIBasedOnAuthAndRole(); 
                 addMessageToChat("Sistem", `Sidang baru telah dibuat dengan ID: <span class="font-bold text-blue-700">${currentRoomId}</span>. Berikan ID ini kepada peserta lain.`, false);
 
 
             } catch (error) {
                 console.error("Error creating new room:", error);
                 addMessageToChat("Sistem", `Gagal membuat sidang baru: ${error.message}.`, false);
-                currentRoomId = null; // Reset room ID on failure
-                updateUIBasedOnAuthAndRole(); // Go back to room selection
+                currentRoomId = null; 
+                updateUIBasedOnAuthAndRole(); 
             }
         }
 
@@ -709,6 +774,9 @@
                     updateSpeakerDisplay();
                 }
 
+                // Fetch current room's assigned roles
+                roomAssignedRoles = roomSnap.data().assignedRoles || {};
+
                 // Determine user's role for this room
                 const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
                 const userRoleSnap = await getDoc(userRoomRoleRef);
@@ -716,36 +784,59 @@
                 if (userRoleSnap.exists() && userRoleSnap.data().role) {
                     selectedRole = userRoleSnap.data().role;
                     $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
-                    // Highlight the assigned role button and disable all role buttons
                     $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
                     $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
                     $('.role-button').prop('disabled', true); 
                 } else {
-                    // No role assigned for this room yet, assign based on default registered role
-                    // Check if the user's default role is Penggugat and if Penggugat slot is taken
-                    if (userDefaultRole === "Penggugat" && roomSnap.data().penggugatId && roomSnap.data().penggugatId !== userId) {
-                        addMessageToChat("Sistem", "Peran Penggugat sudah diambil untuk sidang ini. Silakan pilih peran lain.", false);
-                        selectedRole = null;
-                        $('.role-button').prop('disabled', false); // Allow selection of other roles
-                        $(`button[data-role="Penggugat"]`).prop('disabled', true); // Explicitly disable Penggugat
-                    } else if (userDefaultRole) { // Assign default role if available and not Penggugat clash
-                        selectedRole = userDefaultRole;
-                        await setDoc(userRoomRoleRef, { role: selectedRole });
-                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
-                        $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
-                        $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
-                        $('.role-button').prop('disabled', true); 
-                        addMessageToChat("Sistem", `Peran Anda telah otomatis ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
-                    } else { // No default role, user must pick one
-                        selectedRole = null;
-                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>`);
-                        $('.role-button').prop('disabled', false); // Enable all role buttons
-                        // Disable Penggugat if already taken
-                        if (roomSnap.data().penggugatId) {
-                            $(`button[data-role="Penggugat"]`).prop('disabled', true);
+                    // No role assigned for this room yet, check if default role can be assigned
+                    let assignedDefault = false;
+                    if (userDefaultRole && !Object.values(roomAssignedRoles).includes(userId)) { // If default role is not already assigned to another user in this room
+                        // Special handling for Penggugat: only room creator can be Penggugat
+                        if (userDefaultRole === "Penggugat" && roomSnap.data().createdBy !== userId) {
+                            addMessageToChat("Sistem", "Peran Penggugat sudah diambil untuk sidang ini. Silakan minta Hakim untuk menetapkan peran Anda.", false);
+                            selectedRole = null; // User cannot be Penggugat
+                        } else if (!roomAssignedRoles[userDefaultRole]) { // Check if the default role slot is free
+                            selectedRole = userDefaultRole;
+                            await setDoc(userRoomRoleRef, { role: selectedRole });
+                            // Update room's assignedRoles map
+                            const newAssignedRoles = { ...roomAssignedRoles, [selectedRole]: userId };
+                            await updateDoc(roomRef, { assignedRoles: newAssignedRoles });
+                            addMessageToChat("Sistem", `Peran Anda telah otomatis ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
+                            assignedDefault = true;
+                        } else {
+                            addMessageToChat("Sistem", `Peran ${userDefaultRole} sudah diambil. Silakan minta Hakim untuk menetapkan peran Anda.`, false);
+                            selectedRole = null;
+                        }
+                    } else if (Object.values(roomAssignedRoles).includes(userId)) {
+                        // User is already assigned a role by Hakim but their roomRoles doc might be missing for some reason
+                        const assignedRoleName = Object.keys(roomAssignedRoles).find(key => roomAssignedRoles[key] === userId);
+                        if (assignedRoleName) {
+                            selectedRole = assignedRoleName;
+                            await setDoc(userRoomRoleRef, { role: selectedRole });
+                            $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
+                            $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
+                            $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
+                            $('.role-button').prop('disabled', true); 
+                            assignedDefault = true;
                         }
                     }
+                    
+                    if (!assignedDefault) {
+                        selectedRole = null; // Ensure selectedRole is null if not assigned
+                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>`);
+                        $('.role-button').prop('disabled', true); // Disable selection, waiting for Hakim
+                        addMessageToChat("Sistem", "Peran Anda akan ditetapkan oleh Hakim. Silakan tunggu.", false);
+                    }
                 }
+
+                // Save this room to user's joined history
+                const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', userId, 'joinedRooms', currentRoomId);
+                await setDoc(joinedRoomRef, {
+                    scenario: currentScenario,
+                    role: selectedRole, // Role might be null if user hasn't selected it yet for this room, or waiting Hakim
+                    lastAccessed: serverTimestamp(),
+                    roomId: currentRoomId
+                });
 
                 // Start listening to chat for the joined room
                 startListeningToRoomChat(currentRoomId);
@@ -765,6 +856,200 @@
             }
         }
 
+        // --- HAKIM MANAGEMENT ---
+        async function loadRoomParticipantsForHakim(roomId) {
+            const roomParticipantsListDiv = $('#room-participants-list');
+            roomParticipantsListDiv.html('<p class="text-gray-500 text-center text-sm">Memuat peserta...</p>');
+
+            // Listen to all user's roomRoles for this roomId to get participants
+            const roomRolesCollectionRef = collection(db, 'artifacts', __app_id, 'users');
+            const q = query(roomRolesCollectionRef); // We need to query all users and then filter their roomRoles
+
+            // Unsubscribe from previous listener if any
+            if (unsubscribeFromRoomParticipants) {
+                unsubscribeFromRoomParticipants();
+            }
+
+            unsubscribeFromRoomParticipants = onSnapshot(q, async (querySnapshot) => {
+                const participants = [];
+                const assignedUsers = Object.values(roomAssignedRoles);
+                const allRoles = ["Penggugat", "Tergugat", "Saksi", "Panitera", "Hakim"];
+
+                for (const userDoc of querySnapshot.docs) {
+                    const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userDoc.id, 'roomRoles', roomId);
+                    const userRoomRoleSnap = await getDoc(userRoomRoleRef);
+
+                    if (userRoomRoleSnap.exists()) {
+                        const participantRole = userRoomRoleSnap.data().role;
+                        const participantEmail = userDoc.data().profile?.data?.email || "Email tidak diketahui";
+                        
+                        participants.push({
+                            uid: userDoc.id,
+                            email: participantEmail,
+                            assignedRole: participantRole || 'Belum ditetapkan'
+                        });
+                    }
+                }
+
+                roomParticipantsListDiv.empty();
+                if (participants.length === 0) {
+                    roomParticipantsListDiv.html('<p class="text-gray-500 text-center text-sm">Belum ada peserta lain di sidang ini.</p>');
+                    return;
+                }
+
+                participants.forEach(participant => {
+                    // Don't show the Hakim themselves in the list for assignment
+                    if (participant.uid === userId) return; 
+
+                    let availableRolesForAssignment = allRoles.filter(role => !roomAssignedRoles[role] || roomAssignedRoles[role] === participant.uid);
+                    
+                    // Do not allow reassigning Hakim if it's already assigned and not to this user
+                    if (roomAssignedRoles["Hakim"] && roomAssignedRoles["Hakim"] !== userId && roomAssignedRoles["Hakim"] !== participant.uid) {
+                        availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Hakim");
+                    }
+                    // Prevent assigning Penggugat if room creator is Penggugat and it's someone else
+                    const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
+                    getDoc(roomRef).then(roomSnap => {
+                        if (roomSnap.exists() && roomSnap.data().createdBy === roomAssignedRoles["Penggugat"] && participant.uid !== roomSnap.data().createdBy) {
+                             availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Penggugat");
+                        }
+                        
+                        const participantHtml = `
+                            <div class="p-2 border border-gray-200 rounded-lg bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm">
+                                <div>
+                                    <p class="font-semibold text-gray-800">${participant.email} (${participant.uid.substring(0,4)}...)</p>
+                                    <p class="text-gray-600 text-xs">Peran: <span class="font-medium">${participant.assignedRole}</span></p>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-2 sm:mt-0">
+                                    ${availableRolesForAssignment.map(role => `
+                                        <button class="assign-role-btn bg-blue-500 text-white px-2 py-1 rounded-md text-xs hover:bg-blue-600"
+                                            data-target-uid="${participant.uid}" data-target-role="${role}">
+                                            Tetapkan ${role}
+                                        </button>
+                                    `).join('')}
+                                    ${participant.assignedRole !== 'Belum ditetapkan' && participant.assignedRole !== 'Hakim (AI)' ? `
+                                    <button class="unassign-role-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600"
+                                            data-target-uid="${participant.uid}" data-target-role="${participant.assignedRole}">
+                                            Batal Tetapkan ${participant.assignedRole}
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                        roomParticipantsListDiv.append(participantHtml);
+                    });
+                });
+
+                // Attach event handlers for assign/unassign buttons after rendering
+                $('.assign-role-btn').off('click').on('click', async function() {
+                    const targetUid = $(this).data('target-uid');
+                    const targetRole = $(this).data('target-role');
+                    await assignRoleToUser(targetUid, targetRole);
+                });
+                $('.unassign-role-btn').off('click').on('click', async function() {
+                    const targetUid = $(this).data('target-uid');
+                    const targetRole = $(this).data('target-role');
+                    await unassignRoleFromUser(targetUid, targetRole);
+                });
+
+
+            }, (error) => {
+                console.error("Error listening to room participants:", error);
+                roomParticipantsListDiv.html('<p class="text-red-500 text-center text-sm">Gagal memuat daftar peserta.</p>');
+            });
+        }
+
+
+        async function assignRoleToUser(targetUid, targetRole) {
+            if (!currentRoomId || !userId || selectedRole !== 'Hakim') {
+                addMessageToChat("Sistem", "Hanya Hakim di sidang aktif yang bisa menetapkan peran.", false);
+                return;
+            }
+
+            const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
+            const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'roomRoles', currentRoomId);
+            const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'joinedRooms', currentRoomId);
+
+            try {
+                let currentAssignedRoles = roomAssignedRoles; // Use locally cached map
+
+                // Check if role is already assigned to someone else
+                let roleAlreadyTakenBy = null;
+                for (const roleKey in currentAssignedRoles) {
+                    if (currentAssignedRoles[roleKey] === targetUid) {
+                        // This user already has a role. If it's the same, do nothing.
+                        if (roleKey === targetRole) {
+                            addMessageToChat("Sistem", `Pengguna ini sudah menjadi ${targetRole}.`, false);
+                            return;
+                        }
+                        // If they have a different role, first unassign the old one
+                        delete currentAssignedRoles[roleKey];
+                        addMessageToChat("Sistem", `${targetUid.substring(0,4)}... kini tidak lagi ${roleKey}.`, false);
+                        break;
+                    }
+                }
+
+                if (currentAssignedRoles[targetRole] && currentAssignedRoles[targetRole] !== targetUid) {
+                    roleAlreadyTakenBy = currentAssignedRoles[targetRole];
+                    addMessageToChat("Sistem", `Peran ${targetRole} sudah diambil oleh ${roleAlreadyTakenBy.substring(0,4)}.... Silakan batalkan penetapan terlebih dahulu.`, false);
+                    return;
+                }
+
+                // Assign the new role
+                currentAssignedRoles[targetRole] = targetUid;
+
+                // Update assignedRoles map in room document
+                await updateDoc(roomRef, { assignedRoles: currentAssignedRoles });
+
+                // Update target user's role for this room
+                await setDoc(userRoomRoleRef, { role: targetRole });
+
+                // Update user's joinedRooms entry
+                await updateDoc(joinedRoomRef, { role: targetRole, lastAccessed: serverTimestamp() });
+
+                addMessageToChat("Sistem", `Hakim: Menetapkan ${targetUid.substring(0,4)}... sebagai ${targetRole}.`, false);
+                updateUIBasedOnAuthAndRole(); // Re-evaluate UI for everyone
+
+            } catch (error) {
+                console.error("Error assigning role:", error);
+                addMessageToChat("Sistem", `Gagal menetapkan peran: ${error.message}.`, false);
+            }
+        }
+
+        async function unassignRoleFromUser(targetUid, targetRole) {
+            if (!currentRoomId || !userId || selectedRole !== 'Hakim') {
+                addMessageToChat("Sistem", "Hanya Hakim di sidang aktif yang bisa membatalkan penetapan peran.", false);
+                return;
+            }
+
+            const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
+            const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'roomRoles', currentRoomId);
+            const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'joinedRooms', currentRoomId);
+
+            try {
+                let currentAssignedRoles = roomAssignedRoles;
+
+                if (currentAssignedRoles[targetRole] !== targetUid) {
+                    addMessageToChat("Sistem", `Pengguna ini bukan ${targetRole}.`, false);
+                    return;
+                }
+
+                delete currentAssignedRoles[targetRole]; // Remove assignment
+
+                await updateDoc(roomRef, { assignedRoles: currentAssignedRoles });
+                await deleteDoc(userRoomRoleRef); // Remove user's role for this room
+                await updateDoc(joinedRoomRef, { role: null, lastAccessed: serverTimestamp() }); // Clear role in history
+
+                addMessageToChat("Sistem", `Hakim: Membatalkan penetapan ${targetRole} dari ${targetUid.substring(0,4)}....`, false);
+                updateUIBasedOnAuthAndRole();
+
+            } catch (error) {
+                console.error("Error unassigning role:", error);
+                addMessageToChat("Sistem", `Gagal membatalkan penetapan peran: ${error.message}.`, false);
+            }
+        }
+
+
         function startListeningToRoomChat(roomId) {
             // Unsubscribe from previous listener if any
             if (unsubscribeFromChat) {
@@ -775,11 +1060,16 @@
                 unsubscribeFromSpeaker();
                 unsubscribeFromSpeaker = null;
             }
+            if (unsubscribeFromRoomParticipants) { // Also unsubscribe Hakim's listener
+                unsubscribeFromRoomParticipants();
+                unsubscribeFromRoomParticipants = null;
+            }
 
+            // Listen to chat messages
             const chatCollectionRef = collection(db, 'artifacts', __app_id, 'rooms', roomId, 'chatMessages'); 
-            const q = query(chatCollectionRef, orderBy('timestamp'));
+            const qChat = query(chatCollectionRef, orderBy('timestamp'));
 
-            unsubscribeFromChat = onSnapshot(q, (snapshot) => {
+            unsubscribeFromChat = onSnapshot(qChat, (snapshot) => {
                 $('#chat-area').empty();
                 chatHistory = [];
                 snapshot.forEach((doc) => {
@@ -792,19 +1082,35 @@
                 addMessageToChat("Sistem", "Gagal memuat riwayat obrolan.", false);
             });
 
+            // Listen to current speaker state
             const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', roomId, 'state', 'currentSpeaker'); 
             unsubscribeFromSpeaker = onSnapshot(speakerStateRef, (speakerDoc) => {
                 if (speakerDoc.exists() && speakerDoc.data().speaker) {
                     currentSpeaker = speakerDoc.data().speaker;
                     updateSpeakerDisplay();
-                    updateUIBasedOnAuthAndRole(); // Re-evaluate button states based on new speaker
+                    updateUIBasedOnAuthAndRole(); 
                 } else {
-                    currentSpeaker = 'Memuat...'; // Or a suitable default while loading
+                    currentSpeaker = 'Memuat...'; 
                     updateSpeakerDisplay();
                 }
             }, (error) => {
                 console.error("Error listening to speaker state:", error);
                 addMessageToChat("Sistem", "Gagal memuat giliran bicara.", false);
+            });
+
+            // Listen to room document for assignedRoles changes (important for Hakim panel and all clients)
+            const roomDocRef = doc(db, 'artifacts', __app_id, 'rooms', roomId);
+            unsubscribeFromRoomParticipants = onSnapshot(roomDocRef, (roomSnap) => {
+                if (roomSnap.exists()) {
+                    roomAssignedRoles = roomSnap.data().assignedRoles || {};
+                    // If current user is Hakim, re-render Hakim panel to show updated assignments
+                    if (selectedRole === 'Hakim') {
+                        loadRoomParticipantsForHakim(roomId); // Re-render the participant list
+                    }
+                    updateUIBasedOnAuthAndRole(); // Ensure everyone's role display and button states are correct
+                }
+            }, (error) => {
+                console.error("Error listening to room document (assigned roles):", error);
             });
         }
 
@@ -936,6 +1242,7 @@
             $('#leave-room-button').on('click', async function() {
                 if (unsubscribeFromChat) { unsubscribeFromChat(); unsubscribeFromChat = null; }
                 if (unsubscribeFromSpeaker) { unsubscribeFromSpeaker(); unsubscribeFromSpeaker = null; }
+                if (unsubscribeFromRoomParticipants) { unsubscribeFromRoomParticipants(); unsubscribeFromRoomParticipants = null; } // Clear Hakim listener
                 currentRoomId = null;
                 chatHistory = [];
                 $('#chat-area').empty();
@@ -1019,6 +1326,10 @@
                     const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
                     await setDoc(userRoomRoleRef, { role: newRole });
                     selectedRole = newRole; // Update local state
+                    // Also update the role in joinedRooms if it's already there
+                    const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', userId, 'joinedRooms', currentRoomId);
+                    await updateDoc(joinedRoomRef, { role: selectedRole, lastAccessed: serverTimestamp() });
+
                     addMessageToChat("Sistem", `Peran Anda telah ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
                 } catch (error) {
                     console.error("Error setting role for room:", error);
