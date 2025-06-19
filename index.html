@@ -16,35 +16,10 @@
             background-color: #f0f2f5;
         }
         .container {
-            /* Adjusted max-width for better responsiveness across screen sizes */
-            max-width: 95%; /* More fluid on small screens */
-            width: 100%; /* Ensure it takes full width initially */
+            max-width: 90%; /* Adjust as needed for larger screens */
             margin: 0 auto;
-            padding: 1rem; /* Slightly reduced padding on small screens */
+            padding: 1.5rem; /* Reduced padding */
         }
-        @media (min-width: 640px) { /* sm breakpoint */
-            .container {
-                max-width: 90%;
-                padding: 1.5rem;
-            }
-        }
-        @media (min-width: 768px) { /* md breakpoint */
-            .container {
-                max-width: 80%;
-                padding: 2rem;
-            }
-        }
-        @media (min-width: 1024px) { /* lg breakpoint */
-            .container {
-                max-width: 70%;
-            }
-        }
-        @media (min-width: 1280px) { /* xl breakpoint */
-            .container {
-                max-width: 60%;
-            }
-        }
-
         .chat-bubble {
             max-width: 80%;
             border-radius: 0.75rem; /* rounded-xl */
@@ -95,30 +70,6 @@
             border: 2px solid #2563eb; /* blue-600 */
             box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.5); /* ring-2 ring-blue-500 */
         }
-        /* For role radio buttons */
-        .role-radio-group label {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            margin-bottom: 0.5rem;
-        }
-        .role-radio-group label:hover {
-            background-color: #f3f4f6;
-        }
-        .role-radio-group input[type="radio"]:checked + span {
-            font-weight: 600;
-            color: #2563eb;
-        }
-        .role-radio-group input[type="radio"]:checked + span::before {
-            content: '✅ '; /* Checkmark for selected radio */
-        }
-        .role-radio-group input[type="radio"] {
-            margin-right: 0.5rem;
-        }
 
         /* Responsive adjustments */
         @media (min-width: 768px) {
@@ -133,204 +84,67 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 sm:p-6">
-    <div class="container bg-white p-4 sm:p-6 rounded-xl shadow-lg flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
-        <!-- Auth Section -->
-        <div id="auth-section" class="w-full flex flex-col space-y-6">
-            <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Masuk / Daftar</h2>
-                <p id="auth-message" class="text-center text-red-500 mb-4 hidden text-sm sm:text-base"></p>
-                
-                <div id="login-form">
-                    <label for="login-email" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Email:</label>
-                    <input type="email" id="login-email" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="email@example.com">
-                    
-                    <label for="login-password" class="block text-sm sm:text-md font-medium text-gray-700 mt-4 mb-2">Kata Sandi:</label>
-                    <input type="password" id="login-password" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="********">
-                    
-                    <button id="login-submit-button" class="mt-4 sm:mt-6 w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
-                        Masuk
-                    </button>
-                    <p class="text-center text-gray-600 mt-3 sm:mt-4 text-xs sm:text-sm">Belum punya akun? <a href="#" id="show-register" class="text-blue-600 hover:underline">Daftar di sini</a></p>
-                </div>
-
-                <div id="register-form" class="hidden">
-                    <label for="register-email" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Email:</label>
-                    <input type="email" id="register-email" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="email@example.com">
-                    
-                    <label for="register-password" class="block text-sm sm:text-md font-medium text-gray-700 mt-4 mb-2">Kata Sandi:</label>
-                    <input type="password" id="register-password" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Minimal 6 karakter">
-                    
-                    <label for="register-confirm-password" class="block text-sm sm:text-md font-medium text-gray-700 mt-4 mb-2">Konfirmasi Kata Sandi:</label>
-                    <input type="password" id="register-confirm-password" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Ulangi kata sandi">
-
-                    <label class="block text-sm sm:text-md font-medium text-gray-700 mt-4 mb-2">Pilih Peran Default Anda:</label>
-                    <div class="role-radio-group flex flex-col space-y-2">
-                        <label>
-                            <input type="radio" name="register-role" value="Penggugat" class="form-radio text-blue-600" checked>
-                            <span class="text-sm sm:text-base">Penggugat</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="register-role" value="Tergugat" class="form-radio text-blue-600">
-                            <span class="text-sm sm:text-base">Tergugat</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="register-role" value="Saksi" class="form-radio text-blue-600">
-                            <span class="text-sm sm:text-base">Saksi</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="register-role" value="Panitera" class="form-radio text-blue-600">
-                            <span class="text-sm sm:text-base">Panitera</span>
-                        </label>
-                        <label>
-                            <input type="radio" name="register-role" value="Hakim" class="form-radio text-blue-600">
-                            <span class="text-sm sm:text-base">Hakim</span>
-                        </label>
-                    </div>
-                    
-                    <button id="register-submit-button" class="mt-4 sm:mt-6 w-full bg-green-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
-                        Daftar
-                    </button>
-                    <p class="text-center text-gray-600 mt-3 sm:mt-4 text-xs sm:text-sm">Sudah punya akun? <a href="#" id="show-login" class="text-blue-600 hover:underline">Masuk di sini</a></p>
+<body class="min-h-screen flex items-center justify-center p-4">
+    <div class="container bg-white p-6 rounded-xl shadow-lg flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
+        <!-- Left Panel: Scenario, Role Selection -->
+        <div class="lg:w-1/2 flex flex-col space-y-6">
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">Simulasi Peradilan Semu</h2>
+                <p class="text-gray-700 leading-relaxed mb-4">Selamat datang di aplikasi simulasi peradilan semu hukum acara perdata. Aplikasi ini akan membantu Anda memahami dinamika persidangan dengan memainkan peran yang berbeda.</p>
+                <div class="mt-4 p-4 bg-white rounded-lg border border-gray-300">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Skenario Kasus:</h3>
+                    <p class="text-gray-600 text-sm">
+                        Sebuah sengketa perdata antara Bapak Budi (Penggugat) dan Ibu Siti (Tergugat) mengenai wanprestasi perjanjian sewa-menyewa rumah. Bapak Budi mengklaim Ibu Siti belum membayar sewa selama 3 bulan, sementara Ibu Siti menyatakan rumah tersebut tidak layak huni dan Bapak Budi tidak pernah melakukan perbaikan.
+                    </p>
                 </div>
             </div>
-        </div>
 
-        <!-- Room Selection Section (Hidden by default) -->
-        <div id="room-selection-section" class="w-full flex-col space-y-6 hidden">
-            <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Pilih Sidang</h2>
-                <p id="user-info-room-select" class="text-center text-gray-700 mb-4 text-sm sm:text-base">Memuat...</p>
-                
-                <button id="create-room-button" class="w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
-                    Buat Sidang Baru (Anda akan menjadi Penggugat)
-                </button>
-
-                <div class="mt-4 sm:mt-6 text-center text-gray-700 text-sm sm:text-base">Atau</div>
-
-                <div class="mt-4 sm:mt-6">
-                    <label for="join-room-id" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">ID Sidang:</label>
-                    <input type="text" id="join-room-id" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200" placeholder="Masukkan ID sidang yang ada">
-                    <button id="join-room-button" class="mt-4 w-full bg-green-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
-                        Gabung Sidang
+            <!-- Role Selection -->
+            <div class="bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Pilih Peran Anda:</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:bg-blue-50 transition duration-200 border border-gray-300" data-role="Hakim">
+                        <span class="text-4xl">👨‍⚖️</span>
+                        <span class="mt-2 text-md font-medium text-gray-700">Hakim</span>
+                    </button>
+                    <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:bg-blue-50 transition duration-200 border border-gray-300" data-role="Penggugat">
+                        <span class="text-4xl">👨‍💼</span>
+                        <span class="mt-2 text-md font-medium text-gray-700">Penggugat</span>
+                    </button>
+                    <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:bg-blue-50 transition duration-200 border border-gray-300" data-role="Tergugat">
+                        <span class="text-4xl">👩‍💼</span>
+                        <span class="mt-2 text-md font-medium text-gray-700">Tergugat</span>
+                    </button>
+                    <button class="role-button flex flex-col items-center justify-center p-4 bg-white rounded-lg shadow-sm hover:bg-blue-50 transition duration-200 border border-gray-300" data-role="Saksi">
+                        <span class="text-4xl">🗣️</span>
+                        <span class="mt-2 text-md font-medium text-gray-700">Saksi</span>
                     </button>
                 </div>
-
-                <div class="mt-8">
-                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 text-center">Riwayat Sidang Anda</h3>
-                    <div id="joined-rooms-list" class="flex flex-col gap-3 max-h-64 overflow-y-auto p-2 border border-gray-300 rounded-lg bg-white">
-                        <p class="text-gray-500 text-center text-sm">Tidak ada riwayat sidang.</p>
-                        <!-- Joined rooms will be listed here -->
-                    </div>
-                </div>
-
-                <button id="logout-button-room-select" class="mt-6 w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-200 shadow-md text-sm sm:text-base">
-                    Keluar
-                </button>
-            </div>
-        </div>
-
-        <!-- Scenario Setup Section (Hidden by default - part of create room flow) -->
-        <div id="create-scenario-section" class="w-full flex-col space-y-6 hidden">
-            <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
-                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Atur Skenario Sidang Baru</h2>
-                <p class="text-gray-700 leading-relaxed mb-4 text-sm sm:text-base">
-                    Masukkan skenario kasus perdata untuk sidang baru ini. ID sidang akan dibuat otomatis.
+                <p id="selected-role-display" class="mt-4 text-center text-lg font-medium text-gray-700">
+                    Peran terpilih: <span class="font-semibold text-blue-600">Belum dipilih</span>
                 </p>
-                <label for="new-scenario-input" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Skenario Perkara:</label>
-                <textarea id="new-scenario-input" rows="8" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y text-sm sm:text-base" placeholder="Contoh: Sebuah sengketa perdata antara Bapak Budi (Penggugat) dan Ibu Siti (Tergugat) mengenai wanprestasi perjanjian sewa-menyewa rumah. Bapak Budi mengklaim Ibu Siti belum membayar sewa selama 3 bulan, sementara Ibu Siti menyatakan rumah tersebut tidak layak huni dan Bapak Budi tidak pernah melakukan perbaikan."></textarea>
-                <button id="submit-new-scenario-button" class="mt-4 sm:mt-6 w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md text-sm sm:text-base">
-                    Buat Sidang
-                </button>
             </div>
         </div>
 
-
-        <!-- Trial Interface Section (Hidden by default) -->
-        <div id="trial-interface-section" class="w-full lg:flex flex-col lg:flex-row space-y-6 lg:space-y-0 lg:space-x-6">
-            <!-- Left Panel: Role Selection -->
-            <div class="lg:w-1/2 flex flex-col space-y-6">
-                <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200">
-                    <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Peran Anda:</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300 text-sm sm:text-base" data-role="Hakim" disabled>
-                            <span class="text-3xl sm:text-4xl">👨‍⚖️</span>
-                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Hakim</span>
-                        </button>
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Penggugat" disabled>
-                            <span class="text-3xl sm:text-4xl">👨‍💼</span>
-                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Penggugat</span>
-                        </button>
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Tergugat" disabled>
-                            <span class="text-3xl sm:text-4xl">👩‍💼</span>
-                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Tergugat</span>
-                        </button>
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Saksi" disabled>
-                            <span class="text-3xl sm:text-4xl">🗣️</span>
-                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Saksi</span>
-                        </button>
-                        <button class="role-button flex flex-col items-center justify-center p-3 sm:p-4 bg-white rounded-lg shadow-sm border border-gray-300" data-role="Panitera" disabled>
-                            <span class="text-3xl sm:text-4xl">📝</span>
-                            <span class="mt-1 sm:mt-2 font-medium text-gray-700">Panitera</span>
-                        </button>
-                    </div>
-                    <p id="selected-role-display" class="mt-3 sm:mt-4 text-center text-sm sm:text-lg font-medium text-gray-700">
-                        Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>
-                    </p>
-                    <div id="current-user-info" class="mt-4 sm:mt-6 text-center text-gray-700 text-sm sm:text-base">
-                        <p id="user-display-name"></p>
-                        <p class="mt-1">ID Sidang: <span id="room-id-display" class="font-bold text-blue-700"></span></p>
-                        <button id="leave-room-button" class="mt-2 bg-yellow-600 text-white py-1.5 px-3 rounded-lg hover:bg-yellow-700 transition duration-200 shadow-md text-xs sm:text-sm">
-                            Tinggalkan Sidang
-                        </button>
-                        <button id="logout-button-trial" class="mt-2 bg-red-600 text-white py-1.5 px-3 rounded-lg hover:bg-red-700 transition duration-200 shadow-md text-xs sm:text-sm">
-                            Keluar
-                        </button>
+        <!-- Right Panel: Chat Interface -->
+        <div class="lg:w-1/2 flex flex-col space-y-6">
+            <div class="flex-grow bg-gray-50 p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Jalannya Persidangan</h2>
+                <div id="chat-area" class="chat-area flex-grow bg-white p-4 rounded-lg border border-gray-300 overflow-y-auto mb-4" style="height: 400px;">
+                    <!-- Chat messages will appear here -->
+                    <div class="chat-bubble system mr-auto">
+                        <p class="text-sm text-gray-800"><span class="font-semibold text-blue-700">Hakim:</span> Selamat datang di persidangan kasus perdata nomor 123/Pdt.G/2025/PN Jkt. Selatan. Sidang hari ini adalah pemeriksaan awal. Saudara Penggugat, silakan sampaikan gugatan Anda.</p>
                     </div>
                 </div>
-                <div id="hakim-management-panel" class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 flex-grow mt-6 hidden">
-                    <h3 class="text-lg sm:text-xl font-bold text-gray-800 mb-3 text-center">Pengelolaan Peran (Hakim)</h3>
-                    <div id="room-participants-list" class="flex flex-col gap-3 max-h-64 overflow-y-auto p-2 border border-gray-300 rounded-lg bg-white">
-                        <p class="text-gray-500 text-center text-sm">Memuat peserta...</p>
-                    </div>
-                </div>
-                <div class="bg-gray-50 p-4 sm:p-6 rounded-lg shadow-sm border border-gray-200 flex-grow mt-6">
-                    <h3 class="text-lg sm:text-xl font-semibold text-gray-700 mb-2">Skenario Kasus Saat Ini:</h3>
-                    <p id="current-scenario-display" class="text-gray-600 text-xs sm:text-sm italic">
-                        <!-- Scenario will be displayed here after starting the trial -->
-                    </p>
-                </div>
-            </div>
 
-            <!-- Right Panel: Chat Interface -->
-            <div class="lg:w-1/2 flex flex-col space-y-6">
-                <div class="flex-grow bg-gray-50 p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200 flex flex-col">
-                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">Jalannya Persidangan</h2>
-                    <div id="current-speaker-display" class="text-center text-sm sm:text-lg font-medium text-gray-700 mb-4">
-                        Giliran Bicara: <span class="font-semibold text-green-600" id="speaker-name">Memuat...</span>
-                    </div>
-                    <div id="chat-area" class="chat-area flex-grow bg-white p-3 sm:p-4 rounded-lg border border-gray-300 overflow-y-auto mb-4" style="height: 400px;">
-                        <!-- Chat messages will appear here -->
-                    </div>
+                <div class="loading-spinner" id="loading-spinner"></div>
 
-                    <div class="loading-spinner" id="loading-spinner"></div>
-
-                    <div class="mt-auto">
-                        <label for="statement-input" class="block text-sm sm:text-md font-medium text-gray-700 mb-2">Pernyataan Anda:</label>
-                        <textarea id="statement-input" rows="4" class="w-full p-2 sm:p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y text-sm sm:text-base" placeholder="Ketik pernyataan Anda di sini..."></textarea>
-                        
-                        <div class="flex flex-col md:flex-row gap-2 mt-4">
-                            <button id="submit-statement-button" class="w-full bg-blue-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
-                                Kirim Pernyataan
-                            </button>
-                            <button id="summarize-button" class="w-full bg-purple-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
-                                ✨ Ringkas Persidangan
-                            </button>
-                            <button id="suggest-questions-button" class="w-full bg-teal-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
-                                ✨ Saran Pertanyaan
-                            </button>
-                        </div>
-                    </div>
+                <div class="mt-auto">
+                    <label for="statement-input" class="block text-md font-medium text-gray-700 mb-2">Pernyataan Anda:</label>
+                    <textarea id="statement-input" rows="4" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-200 resize-y" placeholder="Ketik pernyataan Anda di sini..."></textarea>
+                    <button id="submit-statement-button" class="mt-4 w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                        Kirim Pernyataan
+                    </button>
                 </div>
             </div>
         </div>
@@ -345,814 +159,21 @@
             storageBucket: "sample-firebase-ai-app-f7271.firebasestorage.app",
             messagingSenderId: "855997436295",
             appId: "1:855997436295:web:c9dfdeeb1309b88bc30322"
-        }; // This will be populated from window.__firebase_config
-        let __app_id = 'default-app-id'; // Fallback for __app_id from Canvas
-        let __initial_auth_token = undefined; // Fallback for __initial_auth_token from Canvas
+        };
+        let __app_id = 'default-app-id'; // Fallback
+        let __initial_auth_token = undefined; // Fallback
 
         // Initialize Firebase app and services
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, orderBy, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let app, db, auth, userId;
-        let userDefaultRole = null; // Role selected during registration (Penggugat, Tergugat, etc.)
-        let selectedRole = null; // Role assigned for the current room (will be one of the 'official' roles)
-        let currentSpeaker = ''; // Current role whose turn it is to speak
-        let chatHistory = []; // Local cache of chat messages
-        let currentScenario = ''; // Scenario for the current room
-        let currentRoomId = null; // ID of the current active room
-        let roomAssignedRoles = {}; // Map of roles assigned in the current room: { "Penggugat": "userId1", "Tergugat": "userId2" }
+        let selectedRole = null;
+        const chatHistory = [
+            { role: "Hakim", text: "Selamat datang di persidangan kasus perdata nomor 123/Pdt.G/2025/PN Jkt. Selatan. Sidang hari ini adalah pemeriksaan awal. Saudara Penggugat, silakan sampaikan gugatan Anda." }
+        ];
 
-        // Firestore unsubscribe functions
-        let unsubscribeFromChat = null; 
-        let unsubscribeFromSpeaker = null;
-        let unsubscribeFromRoomParticipants = null; // New: for Hakim panel to see who's in the room
-
-        // Helper function to update the display of the current speaker
-        function updateSpeakerDisplay() {
-            $('#speaker-name').text(currentSpeaker);
-            // Highlight the assigned role button if it matches the current speaker
-            $('.role-button').removeClass('role-selected border-green-600 ring-2 ring-green-500'); 
-            if (currentSpeaker && selectedRole === currentSpeaker) { 
-                $(`button[data-role="${currentSpeaker}"]`).addClass('role-selected border-green-600 ring-2 ring-green-500');
-            }
-        }
-
-        // Helper function to enable/disable statement input and action buttons
-        function setInputAndFeatureButtonsState(disabled) {
-            $('#submit-statement-button').prop('disabled', disabled);
-            $('#summarize-button').prop('disabled', disabled);
-            $('#suggest-questions-button').prop('disabled', disabled);
-            $('#statement-input').prop('disabled', disabled);
-        }
-
-        // Helper function to parse basic Markdown to HTML for display
-        function parseMarkdown(markdownText) {
-            let htmlText = markdownText;
-
-            // Headers
-            htmlText = htmlText.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-            htmlText = htmlText.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-            htmlText = htmlText.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-
-            // Bold text
-            htmlText = htmlText.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
-            htmlText = htmlText.replace(/__(.*?)__/gim, '<strong>$1</strong>');
-
-            // Italic text
-            htmlText = htmlText.replace(/\*(.*?)\*/gim, '<em>$1</em>');
-            htmlText = htmlText.replace(/_(.*?)_/gim, '<em>$1</em>');
-
-            // Lists (simple unordered)
-            const lines = htmlText.split('\n');
-            let inList = false;
-            let processedLines = [];
-
-            lines.forEach(line => {
-                if (line.match(/^\s*[\-\*]\s/)) { 
-                    if (!inList) {
-                        processedLines.push('<ul>');
-                        inList = true;
-                    }
-                    processedLines.push(`<li>${line.replace(/^\s*[\-\*]\s/, '')}</li>`);
-                } else {
-                    if (inList) {
-                        processedLines.push('</ul>');
-                        inList = false;
-                    }
-                    processedLines.push(line);
-                }
-            });
-            if (inList) { 
-                processedLines.push('</ul>');
-            }
-            htmlText = processedLines.join('\n');
-
-            // Newlines to <br> for simple line breaks within paragraphs
-            htmlText = htmlText.replace(/(?<!<\/li>)\n(?!<ul)/g, '<br>');
-
-            return htmlText;
-        }
-
-        // Helper function to add messages to the chat UI
-        function addMessageToChat(role, text, isUser = false) {
-            const messageHtml = `
-                <div class="chat-bubble ${isUser ? 'user ml-auto' : 'system mr-auto'}">
-                    <p class="text-sm text-gray-800"></p>
-                </div>
-            `;
-            const $messageBubble = $(messageHtml);
-            
-            // If it's a system/AI message, parse markdown. Otherwise, just set text.
-            const content = isUser ? text : parseMarkdown(text);
-            $messageBubble.find('p').html(`<span class="font-semibold ${isUser ? 'text-green-700' : 'text-blue-700'}">${role}:</span> ${content}`);
-
-            $('#chat-area').append($messageBubble);
-            $('#chat-area').scrollTop($('#chat-area')[0].scrollHeight);
-        }
-
-        // Function to update UI elements based on authentication status and selected role
-        async function updateUIBasedOnAuthAndRole() {
-            const currentUser = auth.currentUser;
-            if (currentUser) {
-                userId = currentUser.uid;
-                $('#user-display-name').text(`Pengguna: ${currentUser.email}`);
-                
-                // Fetch user's default registered role
-                const userProfileRef = doc(db, 'artifacts', __app_id, 'users', userId, 'profile', 'data');
-                const profileSnap = await getDoc(userProfileRef);
-                if (profileSnap.exists() && profileSnap.data().defaultRole) {
-                    userDefaultRole = profileSnap.data().defaultRole;
-                } else {
-                    userDefaultRole = null;
-                }
-
-                // Show room selection if no room is active
-                if (!currentRoomId) {
-                    $('#auth-section').addClass('hidden');
-                    $('#room-selection-section').removeClass('hidden');
-                    $('#create-scenario-section').addClass('hidden');
-                    $('#trial-interface-section').addClass('hidden');
-                    $('#user-info-room-select').text(`Masuk sebagai: ${currentUser.email}`);
-                    await loadJoinedRooms(); // Load and display joined rooms
-                } else {
-                    // In a room, show trial interface
-                    $('#auth-section').addClass('hidden');
-                    $('#room-selection-section').addClass('hidden');
-                    $('#create-scenario-section').addClass('hidden');
-                    $('#trial-interface-section').removeClass('hidden');
-                    $('#room-id-display').text(currentRoomId);
-
-                    // Fetch current room's assigned roles (for Hakim panel and general role status)
-                    const roomDocRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
-                    const roomDocSnap = await getDoc(roomDocRef);
-                    if (roomDocSnap.exists() && roomDocSnap.data().assignedRoles) {
-                        roomAssignedRoles = roomDocSnap.data().assignedRoles;
-                    } else {
-                        roomAssignedRoles = {};
-                    }
-
-                    // Fetch user's role for the current room
-                    const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
-                    const docSnap = await getDoc(userRoomRoleRef);
-
-                    if (docSnap.exists() && docSnap.data().role) {
-                        selectedRole = docSnap.data().role;
-                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
-                        // Highlight the assigned role button and disable all role buttons
-                        $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
-                        $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
-                        $('.role-button').prop('disabled', true); 
-
-                        // Show Hakim panel if current user is Hakim
-                        if (selectedRole === 'Hakim') {
-                            $('#hakim-management-panel').removeClass('hidden');
-                            await loadRoomParticipantsForHakim(currentRoomId);
-                        } else {
-                            $('#hakim-management-panel').addClass('hidden');
-                        }
-
-                    } else {
-                        // If no role saved for this room, user needs to pick one (or it's assigned by Hakim)
-                        selectedRole = null;
-                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>`);
-                        $('.role-button').prop('disabled', false); // Enable all role buttons initially
-                        $('#hakim-management-panel').addClass('hidden'); // Not Hakim yet
-
-                        // Dynamically disable roles already assigned or 'Penggugat' if not room creator
-                        for (const roleKey in roomAssignedRoles) {
-                            if (roomAssignedRoles[roleKey]) {
-                                $(`button[data-role="${roleKey}"]`).prop('disabled', true);
-                            }
-                        }
-                        const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId); 
-                        const roomSnap = await getDoc(roomRef);
-                        if (roomSnap.exists() && roomSnap.data().createdBy !== userId) {
-                            $(`button[data-role="Penggugat"]`).prop('disabled', true);
-                        }
-                    }
-
-                    // Enable/disable input and feature buttons based on turn and assigned role
-                    if (selectedRole && selectedRole === currentSpeaker) {
-                        setInputAndFeatureButtonsState(false);
-                    } else if (selectedRole) { // If a role is selected but not their turn
-                        setInputAndFeatureButtonsState(false); // Features still enabled
-                        $('#submit-statement-button').prop('disabled', true); // But not submit
-                    } else { // No role assigned for this room yet
-                        setInputAndFeatureButtonsState(true); // All disabled until role chosen
-                    }
-                }
-            } else {
-                userId = null;
-                userDefaultRole = null;
-                selectedRole = null;
-                currentRoomId = null; 
-                roomAssignedRoles = {}; // Clear assigned roles cache
-                // Unsubscribe from any active listeners on logout
-                if (unsubscribeFromChat) { unsubscribeFromChat(); unsubscribeFromChat = null; }
-                if (unsubscribeFromSpeaker) { unsubscribeFromSpeaker(); unsubscribeFromSpeaker = null; }
-                if (unsubscribeFromRoomParticipants) { unsubscribeFromRoomParticipants(); unsubscribeFromRoomParticipants = null; }
-
-                $('#auth-section').removeClass('hidden');
-                $('#room-selection-section').addClass('hidden');
-                $('#create-scenario-section').addClass('hidden');
-                $('#trial-interface-section').addClass('hidden');
-                $('#auth-message').text('').addClass('hidden'); // Clear auth message
-                $('#login-form').removeClass('hidden');
-                $('#register-form').addClass('hidden');
-                // Ensure UI is clean on logout
-                $('#chat-area').empty();
-                chatHistory = [];
-                currentSpeaker = '';
-                updateSpeakerDisplay();
-            }
-        }
-
-        // Centralized function to call Gemini API
-        async function callGeminiApi(prompt, isFeatureCall = false, isInitialHakimCall = false) {
-            $('#loading-spinner').show();
-            setInputAndFeatureButtonsState(true); 
-
-            try {
-                const payload = {
-                    contents: [{ role: "user", parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        topK: 40,
-                        topP: 0.95,
-                        maxOutputTokens: 2000
-                    }
-                };
-
-                const apiKey = "AIzaSyA4p9orSNKzkVFOa0IAGca1GNqSFCg11vo"; // Canvas will automatically provide this at runtime
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-
-                let llmResponseText = "Maaf, saya tidak bisa memberikan respons saat ini.";
-                let llmResponseRole = "Sistem";
-                let nextDirectedSpeaker = currentSpeaker;
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    llmResponseText = result.candidates[0].content.parts[0].text;
-
-                    if (!isFeatureCall) {
-                        const roles = ["Hakim", "Penggugat", "Tergugat", "Saksi", "Panitera"];
-                        const match = llmResponseText.match(/^(Hakim)\s?\(untuk\s(Penggugat|Tergugat|Saksi|Panitera)\):\s*(.*)/i);
-                        if (match) {
-                            llmResponseRole = match[1];
-                            nextDirectedSpeaker = match[2];
-                            llmResponseText = match[3].trim();
-                        } else {
-                            for (const role of roles) {
-                                if (llmResponseText.startsWith(`${role}:`)) {
-                                    llmResponseRole = role;
-                                    llmResponseText = llmResponseText.substring(`${role}:`.length).trim();
-                                    break;
-                                }
-                            }
-                            if (llmResponseRole === "Hakim") {
-                                nextDirectedSpeaker = "Hakim";
-                            } else {
-                                nextDirectedSpeaker = llmResponseRole;
-                            }
-                        }
-                    } else {
-                        llmResponseRole = "Asisten AI";
-                        nextDirectedSpeaker = currentSpeaker; 
-                    }
-
-                    if (llmResponseRole === "Hakim") {
-                        llmResponseRole = "Hakim (AI)";
-                    }
-
-                } else {
-                    console.error("Unexpected LLM response structure:", result);
-                    nextDirectedSpeaker = currentSpeaker;
-                }
-
-                // For initial Hakim call, we need to manually add it to Firestore and local history
-                if (isInitialHakimCall) {
-                    // This message will be displayed via the snapshot listener
-                    await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { 
-                        role: llmResponseRole,
-                        text: llmResponseText,
-                        isUser: false, 
-                        timestamp: serverTimestamp()
-                    });
-                    // Set initial speaker state in Firestore
-                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { 
-                        speaker: "Penggugat" 
-                    });
-                } else if (isFeatureCall) {
-                    addMessageToChat(llmResponseRole, llmResponseText, false); 
-                } else {
-                    // Update current speaker state in Firestore for regular turns
-                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { 
-                        speaker: nextDirectedSpeaker
-                    });
-                }
-
-            } catch (error) {
-                console.error("Error calling Gemini API:", error);
-                addMessageToChat("Sistem", "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.");
-                if (!isFeatureCall && !isInitialHakimCall) {
-                    await setDoc(doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'), { 
-                        speaker: "Hakim"
-                    });
-                }
-            } finally {
-                $('#loading-spinner').hide();
-                updateUIBasedOnAuthAndRole(); 
-            }
-        }
-
-        // --- ROOM MANAGEMENT ---
-        async function createNewRoom(scenarioText) {
-            if (!userId) {
-                addMessageToChat("Sistem", "Anda harus masuk untuk membuat sidang baru.", false);
-                return;
-            }
-            if (userDefaultRole && userDefaultRole !== "Penggugat") {
-                addMessageToChat("Sistem", "Untuk membuat sidang baru, Anda harus mendaftar sebagai Penggugat atau menggunakan akun Penggugat.", false);
-                return;
-            }
-
-            const newRoomRef = doc(collection(db, 'artifacts', __app_id, 'rooms')); 
-            const newRoomId = newRoomRef.id;
-            currentRoomId = newRoomId;
-
-            try {
-                // Save scenario and creator info
-                await setDoc(newRoomRef, {
-                    scenario: scenarioText,
-                    createdAt: serverTimestamp(),
-                    createdBy: userId,
-                    initialSpeaker: "Penggugat",
-                    assignedRoles: { "Penggugat": userId } // Penggugat is creator by default
-                });
-
-                // Set creator's role for this room to Penggugat
-                const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
-                await setDoc(userRoomRoleRef, { role: "Penggugat" }); 
-                selectedRole = "Penggugat"; 
-
-                // Save this room to user's joined history
-                const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', userId, 'joinedRooms', currentRoomId);
-                await setDoc(joinedRoomRef, {
-                    scenario: scenarioText,
-                    role: selectedRole,
-                    lastAccessed: serverTimestamp(),
-                    roomId: currentRoomId
-                });
-
-                // Initialize chat history and speaker for this new room via LLM
-                $('#chat-area').empty(); 
-                chatHistory = []; 
-
-                const initialHakimPrompt = `
-                    Sebagai Hakim di persidangan semu hukum acara perdata, mohon buka sidang untuk kasus berikut:
-                    "${scenarioText}"
-                    Setelah pembukaan, persilakan Penggugat untuk menyampaikan gugatannya.
-                    Format respons Anda seperti ini: Hakim (untuk Penggugat): [Pesan Pembukaan dan Permintaan untuk Penggugat].
-                `;
-                await callGeminiApi(initialHakimPrompt, false, true); 
-
-                // Start listening to chat for the new room
-                startListeningToRoomChat(currentRoomId);
-
-                // Transition to trial interface
-                $('#create-scenario-section').addClass('hidden');
-                $('#trial-interface-section').removeClass('hidden');
-                updateUIBasedOnAuthAndRole(); 
-                addMessageToChat("Sistem", `Sidang baru telah dibuat dengan ID: <span class="font-bold text-blue-700">${currentRoomId}</span>. Berikan ID ini kepada peserta lain.`, false);
-
-
-            } catch (error) {
-                console.error("Error creating new room:", error);
-                addMessageToChat("Sistem", `Gagal membuat sidang baru: ${error.message}.`, false);
-                currentRoomId = null; 
-                updateUIBasedOnAuthAndRole(); 
-            }
-        }
-
-        async function joinExistingRoom(roomId) {
-            if (!userId) {
-                addMessageToChat("Sistem", "Anda harus masuk untuk bergabung sidang.", false);
-                return;
-            }
-
-            const roomRef = doc(db, 'artifacts', __app_id, 'rooms', roomId); 
-            try {
-                const roomSnap = await getDoc(roomRef);
-                if (!roomSnap.exists()) {
-                    addMessageToChat("Sistem", "ID Sidang tidak ditemukan.", false);
-                    return;
-                }
-
-                currentRoomId = roomId;
-                currentScenario = roomSnap.data().scenario;
-                $('#room-id-display').text(currentRoomId);
-                $('#current-scenario-display').text(currentScenario);
-
-                // Fetch current speaker state
-                const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'state', 'currentSpeaker'); 
-                const speakerSnap = await getDoc(speakerStateRef);
-                if (speakerSnap.exists()) {
-                    currentSpeaker = speakerSnap.data().speaker;
-                    updateSpeakerDisplay();
-                } else {
-                    currentSpeaker = roomSnap.data().initialSpeaker || 'Penggugat'; // Fallback
-                    updateSpeakerDisplay();
-                }
-
-                // Fetch current room's assigned roles
-                roomAssignedRoles = roomSnap.data().assignedRoles || {};
-
-                // Determine user's role for this room
-                const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
-                const userRoleSnap = await getDoc(userRoomRoleRef);
-
-                if (userRoleSnap.exists() && userRoleSnap.data().role) {
-                    selectedRole = userRoleSnap.data().role;
-                    $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
-                    $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
-                    $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
-                    $('.role-button').prop('disabled', true); 
-                } else {
-                    // No role assigned for this room yet, check if default role can be assigned
-                    let assignedDefault = false;
-                    if (userDefaultRole && !Object.values(roomAssignedRoles).includes(userId)) { // If default role is not already assigned to another user in this room
-                        // Special handling for Penggugat: only room creator can be Penggugat
-                        if (userDefaultRole === "Penggugat" && roomSnap.data().createdBy !== userId) {
-                            addMessageToChat("Sistem", "Peran Penggugat sudah diambil untuk sidang ini. Silakan minta Hakim untuk menetapkan peran Anda.", false);
-                            selectedRole = null; // User cannot be Penggugat
-                        } else if (!roomAssignedRoles[userDefaultRole]) { // Check if the default role slot is free
-                            selectedRole = userDefaultRole;
-                            await setDoc(userRoomRoleRef, { role: selectedRole });
-                            // Update room's assignedRoles map
-                            const newAssignedRoles = { ...roomAssignedRoles, [selectedRole]: userId };
-                            await updateDoc(roomRef, { assignedRoles: newAssignedRoles });
-                            addMessageToChat("Sistem", `Peran Anda telah otomatis ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
-                            assignedDefault = true;
-                        } else {
-                            addMessageToChat("Sistem", `Peran ${userDefaultRole} sudah diambil. Silakan minta Hakim untuk menetapkan peran Anda.`, false);
-                            selectedRole = null;
-                        }
-                    } else if (Object.values(roomAssignedRoles).includes(userId)) {
-                        // User is already assigned a role by Hakim but their roomRoles doc might be missing for some reason
-                        const assignedRoleName = Object.keys(roomAssignedRoles).find(key => roomAssignedRoles[key] === userId);
-                        if (assignedRoleName) {
-                            selectedRole = assignedRoleName;
-                            await setDoc(userRoomRoleRef, { role: selectedRole });
-                            $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
-                            $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
-                            $(`button[data-role="${selectedRole}"]`).addClass('role-selected bg-blue-100');
-                            $('.role-button').prop('disabled', true); 
-                            assignedDefault = true;
-                        }
-                    }
-                    
-                    if (!assignedDefault) {
-                        selectedRole = null; // Ensure selectedRole is null if not assigned
-                        $('#selected-role-display').html(`Peran Anda: <span class="font-semibold text-blue-600">Belum ditetapkan untuk sidang ini</span>`);
-                        $('.role-button').prop('disabled', true); // Disable selection, waiting for Hakim
-                        addMessageToChat("Sistem", "Peran Anda akan ditetapkan oleh Hakim. Silakan tunggu.", false);
-                    }
-                }
-
-                // Save this room to user's joined history
-                const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', userId, 'joinedRooms', currentRoomId);
-                await setDoc(joinedRoomRef, {
-                    scenario: currentScenario,
-                    role: selectedRole, // Role might be null if user hasn't selected it yet for this room, or waiting Hakim
-                    lastAccessed: serverTimestamp(),
-                    roomId: currentRoomId
-                });
-
-                // Start listening to chat for the joined room
-                startListeningToRoomChat(currentRoomId);
-
-                // Transition to trial interface
-                $('#room-selection-section').addClass('hidden');
-                $('#trial-interface-section').removeClass('hidden');
-                updateUIBasedOnAuthAndRole();
-                addMessageToChat("Sistem", `Anda telah bergabung dengan sidang ID: <span class="font-bold text-blue-700">${currentRoomId}</span>.`, false);
-
-
-            } catch (error) {
-                console.error("Error joining room:", error);
-                addMessageToChat("Sistem", `Gagal bergabung sidang: ${error.message}.`, false);
-                currentRoomId = null; // Reset room ID on failure
-                updateUIBasedOnAuthAndRole(); // Stay on room selection
-            }
-        }
-
-        // --- HAKIM MANAGEMENT ---
-        async function loadRoomParticipantsForHakim(roomId) {
-            const roomParticipantsListDiv = $('#room-participants-list');
-            roomParticipantsListDiv.html('<p class="text-gray-500 text-center text-sm">Memuat peserta...</p>');
-
-            // Listen to all user's roomRoles for this roomId to get participants
-            const usersCollectionRef = collection(db, 'artifacts', __app_id, 'users');
-            const allRoles = ["Hakim", "Penggugat", "Tergugat", "Saksi", "Panitera"]; // Include Hakim for assignments
-
-            const participantsInRoom = [];
-            // We need to fetch all users and then filter based on whether they have a role assigned in this room
-            // and get their emails from their profile documents.
-            const allUsersSnapshot = await getDocs(usersCollectionRef); // Get all users
-            
-            for (const userDoc of allUsersSnapshot.docs) {
-                const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userDoc.id, 'roomRoles', roomId);
-                const userRoomRoleSnap = await getDoc(userRoomRoleRef);
-                const userProfileData = userDoc.data().profile?.data; // Get profile data for email
-
-                if (userRoomRoleSnap.exists()) { // Only consider users who have a role assigned for this room
-                    participantsInRoom.push({
-                        uid: userDoc.id,
-                        email: userProfileData?.email || "Email tidak diketahui",
-                        assignedRole: userRoomRoleSnap.data().role || 'Belum ditetapkan'
-                    });
-                }
-            }
-
-
-            roomParticipantsListDiv.empty();
-            // Filter out the Hakim who is currently logged in from the participants list
-            const otherParticipants = participantsInRoom.filter(p => p.uid !== userId);
-
-            if (otherParticipants.length === 0) {
-                roomParticipantsListDiv.html('<p class="text-gray-500 text-center text-sm">Belum ada peserta lain di sidang ini.</p>');
-                return;
-            }
-
-            otherParticipants.forEach(participant => {
-                let availableRolesForAssignment = allRoles.filter(role => {
-                    // A role is available if:
-                    // 1. It's not currently assigned to ANYONE OR
-                    // 2. It IS currently assigned, but to THIS specific participant (meaning they can be re-assigned it)
-                    return !roomAssignedRoles[role] || roomAssignedRoles[role] === participant.uid;
-                });
-                
-                // Special rules for Hakim and Penggugat roles:
-                // If Hakim is already assigned to someone else, current Hakim cannot assign it to another
-                if (roomAssignedRoles["Hakim"] && roomAssignedRoles["Hakim"] !== userId && roomAssignedRoles["Hakim"] !== participant.uid) {
-                    availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Hakim");
-                }
-                
-                // If Penggugat is the room creator and it's someone else, that role is permanently unavailable for others
-                const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
-                getDoc(roomRef).then(roomSnap => {
-                    if (roomSnap.exists() && roomSnap.data().createdBy === roomSnap.data().assignedRoles?.Penggugat && participant.uid !== roomSnap.data().createdBy) {
-                         availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Penggugat");
-                    }
-                    
-                    const participantHtml = `
-                        <div class="p-2 border border-gray-200 rounded-lg bg-white flex flex-col sm:flex-row items-start sm:items-center justify-between text-sm">
-                            <div>
-                                <p class="font-semibold text-gray-800">${participant.email} <span class="text-gray-500 text-xs">(${participant.uid.substring(0,4)}...)</span></p>
-                                <p class="text-gray-600 text-xs mt-1">Peran: <span class="font-medium">${participant.assignedRole}</span></p>
-                            </div>
-                            <div class="flex flex-wrap gap-1 mt-2 sm:mt-0">
-                                ${availableRolesForAssignment.map(role => `
-                                    <button class="assign-role-btn bg-blue-500 text-white px-2 py-1 rounded-md text-xs hover:bg-blue-600"
-                                        data-target-uid="${participant.uid}" data-target-role="${role}">
-                                        Tetapkan ${role}
-                                    </button>
-                                `).join('')}
-                                ${participant.assignedRole !== 'Belum ditetapkan' && roomAssignedRoles[participant.assignedRole] === participant.uid && participant.assignedRole !== 'Penggugat' && participant.assignedRole !== 'Hakim' ? `
-                                    <button class="unassign-role-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600"
-                                            data-target-uid="${participant.uid}" data-target-role="${participant.assignedRole}">
-                                            Batal ${participant.assignedRole}
-                                        </button>
-                                    ` : ''}
-                            </div>
-                        </div>
-                    `;
-                    roomParticipantsListDiv.append(participantHtml);
-                });
-            });
-
-            // Attach event handlers for assign/unassign buttons after rendering (off() to prevent duplicate handlers)
-            // Event delegation is generally better for dynamically added elements, but off() then on() works too.
-            $(document).off('click', '.assign-role-btn').on('click', '.assign-role-btn', async function() {
-                const targetUid = $(this).data('target-uid');
-                const targetRole = $(this).data('target-role');
-                await assignRoleToUser(targetUid, targetRole);
-            });
-            $(document).off('click', '.unassign-role-btn').on('click', '.unassign-role-btn', async function() {
-                const targetUid = $(this).data('target-uid');
-                const targetRole = $(this).data('target-role');
-                await unassignRoleFromUser(targetUid, targetRole);
-            });
-        }
-
-
-        async function assignRoleToUser(targetUid, targetRole) {
-            if (!currentRoomId || !userId || selectedRole !== 'Hakim') {
-                addMessageToChat("Sistem", "Hanya Hakim di sidang aktif yang bisa menetapkan peran.", false);
-                return;
-            }
-
-            const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
-            const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'roomRoles', currentRoomId);
-            const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'joinedRooms', currentRoomId);
-
-            try {
-                let currentAssignedRoles = { ...roomAssignedRoles }; // Make a copy
-
-                // Prevent assigning Penggugat if already taken by creator and not target user
-                const roomSnapForCreatorCheck = await getDoc(roomRef);
-                if (targetRole === "Penggugat" && roomSnapForCreatorCheck.exists() && roomSnapForCreatorCheck.data().createdBy !== targetUid && roomSnapForCreatorCheck.data().assignedRoles?.Penggugat) {
-                    addMessageToChat("Sistem", "Peran Penggugat hanya dapat ditetapkan kepada pembuat sidang.", false);
-                    return;
-                }
-
-                // Check if the target role is already taken by someone else (not the target user)
-                if (currentAssignedRoles[targetRole] && currentAssignedRoles[targetRole] !== targetUid) {
-                    addMessageToChat("Sistem", `Peran ${targetRole} sudah diambil oleh ${userEmailMap[currentAssignedRoles[targetRole]] || currentAssignedRoles[targetRole].substring(0,4)}.... Silakan batalkan penetapan terlebih dahulu.`, false);
-                    return;
-                }
-
-                // If target user already has a different role, unassign the old one first
-                let oldRoleOfTargetUser = null;
-                for (const roleKey in currentAssignedRoles) {
-                    if (currentAssignedRoles[roleKey] === targetUid) {
-                        oldRoleOfTargetUser = roleKey;
-                        delete currentAssignedRoles[roleKey];
-                        // Also remove their userRoomRole in Firestore for the old role
-                        await deleteDoc(doc(db, 'artifacts', __app_id, 'users', targetUid, 'roomRoles', currentRoomId));
-                        break;
-                    }
-                }
-                
-                // Assign the new role
-                currentAssignedRoles[targetRole] = targetUid;
-
-                // Update assignedRoles map in room document
-                await updateDoc(roomRef, { assignedRoles: currentAssignedRoles });
-
-                // Update target user's role for this room
-                await setDoc(userRoomRoleRef, { role: targetRole });
-
-                // Update user's joinedRooms entry
-                await updateDoc(joinedRoomRef, { role: targetRole, lastAccessed: serverTimestamp() });
-
-                addMessageToChat("Sistem", `Hakim: Menetapkan ${userEmailMap[targetUid] || targetUid.substring(0,4)}... sebagai ${targetRole}.`, false);
-                // updateUIBasedOnAuthAndRole() will be called by the room document snapshot listener
-            } catch (error) {
-                console.error("Error assigning role:", error);
-                addMessageToChat("Sistem", `Gagal menetapkan peran: ${error.message}.`, false);
-            }
-        }
-
-        async function unassignRoleFromUser(targetUid, targetRole) {
-            if (!currentRoomId || !userId || selectedRole !== 'Hakim') {
-                addMessageToChat("Sistem", "Hanya Hakim di sidang aktif yang bisa membatalkan penetapan peran.", false);
-                return;
-            }
-
-            // Prevent unassigning Penggugat if the role is held by the room creator
-            const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
-            const roomSnap = await getDoc(roomRef);
-            if (targetRole === "Penggugat" && roomSnap.exists() && roomSnap.data().createdBy === targetUid) {
-                addMessageToChat("Sistem", "Penggugat (pembuat sidang) tidak dapat dibatalkan perannya.", false);
-                return;
-            }
-            // Prevent unassigning Hakim from the AI or if it's the current user (Hakim)
-            if (targetRole === "Hakim" && targetUid === roomAssignedRoles["Hakim"]) {
-                addMessageToChat("Sistem", "Peran Hakim tidak dapat dibatalkan melalui antarmuka ini. Jika Anda ingin menyerahkan peran, tetapkan Hakim baru.", false);
-                return;
-            }
-
-
-            const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'roomRoles', currentRoomId);
-            const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'joinedRooms', currentRoomId);
-
-            try {
-                let currentAssignedRoles = { ...roomAssignedRoles };
-
-                if (currentAssignedRoles[targetRole] !== targetUid) {
-                    addMessageToChat("Sistem", `Pengguna ini bukan ${targetRole}.`, false);
-                    return;
-                }
-
-                delete currentAssignedRoles[targetRole]; // Remove assignment
-
-                await updateDoc(roomRef, { assignedRoles: currentAssignedRoles });
-                await deleteDoc(userRoomRoleRef); // Remove user's role for this room
-                await updateDoc(joinedRoomRef, { role: null, lastAccessed: serverTimestamp() }); // Clear role in history
-
-                addMessageToChat("Sistem", `Hakim: Membatalkan penetapan ${targetRole} dari ${userEmailMap[targetUid] || targetUid.substring(0,4)}....`, false);
-                // updateUIBasedOnAuthAndRole() will be called by the room document snapshot listener
-            } catch (error) {
-                console.error("Error unassigning role:", error);
-                addMessageToChat("Sistem", `Gagal membatalkan penetapan peran: ${error.message}.`, false);
-            }
-        }
-
-
-        function startListeningToRoomChat(roomId) {
-            // Unsubscribe from previous listener if any
-            if (unsubscribeFromChat) {
-                unsubscribeFromChat();
-                unsubscribeFromChat = null;
-            }
-            if (unsubscribeFromSpeaker) {
-                unsubscribeFromSpeaker();
-                unsubscribeFromSpeaker = null;
-            }
-            // Unsubscribe existing room participants listener
-            if (unsubscribeFromRoomParticipants) { 
-                unsubscribeFromRoomParticipants();
-                unsubscribeFromRoomParticipants = null;
-            }
-
-            // Listen to chat messages
-            const chatCollectionRef = collection(db, 'artifacts', __app_id, 'rooms', roomId, 'chatMessages'); 
-            const qChat = query(chatCollectionRef, orderBy('timestamp'));
-
-            unsubscribeFromChat = onSnapshot(qChat, (snapshot) => {
-                $('#chat-area').empty();
-                chatHistory = [];
-                snapshot.forEach((doc) => {
-                    const message = doc.data();
-                    addMessageToChat(message.role, message.text, message.isUser);
-                    chatHistory.push({ role: message.role, text: message.text });
-                });
-            }, (error) => {
-                console.error("Error listening to chat messages:", error);
-                addMessageToChat("Sistem", "Gagal memuat riwayat obrolan.", false);
-            });
-
-            // Listen to current speaker state
-            const speakerStateRef = doc(db, 'artifacts', __app_id, 'rooms', roomId, 'state', 'currentSpeaker'); 
-            unsubscribeFromSpeaker = onSnapshot(speakerStateRef, (speakerDoc) => {
-                if (speakerDoc.exists() && speakerDoc.data().speaker) {
-                    currentSpeaker = speakerDoc.data().speaker;
-                    updateSpeakerDisplay();
-                    // updateUIBasedOnAuthAndRole will be called by room document listener for overall UI refresh
-                } else {
-                    currentSpeaker = 'Memuat...'; 
-                    updateSpeakerDisplay();
-                }
-            }, (error) => {
-                console.error("Error listening to speaker state:", error);
-                addMessageToChat("Sistem", "Gagal memuat giliran bicara.", false);
-            });
-
-            // Listen to room document for assignedRoles changes (important for Hakim panel and all clients)
-            const roomDocRef = doc(db, 'artifacts', __app_id, 'rooms', roomId);
-            unsubscribeFromRoomParticipants = onSnapshot(roomDocRef, (roomSnap) => {
-                if (roomSnap.exists()) {
-                    currentScenario = roomSnap.data().scenario || ''; // Update scenario if it somehow changes (not expected, but good practice)
-                    $('#current-scenario-display').text(currentScenario); // Ensure scenario display is synced
-                    roomAssignedRoles = roomSnap.data().assignedRoles || {};
-                    // If current user is Hakim, re-render Hakim panel to show updated assignments
-                    if (selectedRole === 'Hakim') { 
-                        loadRoomParticipantsForHakim(roomId); // Re-render the participant list
-                    }
-                    updateUIBasedOnAuthAndRole(); // Ensure everyone's role display and button states are correct
-                }
-            }, (error) => {
-                console.error("Error listening to room document (assigned roles/scenario):", error);
-            });
-        }
-
-        // Global map to store user UIDs and their emails/display names
-        // Used by Hakim panel to display user emails instead of just UIDs
-        let userEmailMap = {};
-
-        // Fetch all user profiles to build the email map
-        async function fetchAllUserProfiles() {
-            const usersCollectionRef = collection(db, 'artifacts', __app_id, 'users');
-            const q = query(usersCollectionRef); 
-
-            try {
-                const querySnapshot = await getDocs(q);
-                userEmailMap = {}; 
-                querySnapshot.forEach(userDoc => {
-                    const profileData = userDoc.data().profile?.data;
-                    if (profileData && profileData.email) {
-                        userEmailMap[userDoc.id] = profileData.email;
-                    }
-                });
-                console.log("User email map built:", userEmailMap);
-            } catch (error) {
-                console.error("Error fetching all user profiles:", error);
-            }
-        }
-
-
-        // --- JQUERY READY BLOCK ---
         $(document).ready(function() {
             // Check if global variables are defined by the Canvas environment
             if (typeof window.__firebase_config !== 'undefined') {
@@ -1170,320 +191,164 @@
             db = getFirestore(app);
             auth = getAuth(app);
 
-            // Fetch all user profiles once on app load
-            fetchAllUserProfiles();
-
-            // Firebase Auth State Listener - Central point for UI updates
+            // Sign in anonymously or with custom token
             onAuthStateChanged(auth, async (user) => {
-                updateUIBasedOnAuthAndRole();
-            });
-
-            // --- AUTHENTICATION EVENT HANDLERS ---
-            $('#show-register').on('click', function(e) {
-                e.preventDefault();
-                $('#login-form').addClass('hidden');
-                $('#register-form').removeClass('hidden');
-                $('#auth-message').text('').addClass('hidden'); 
-            });
-
-            $('#show-login').on('click', function(e) {
-                e.preventDefault();
-                $('#register-form').addClass('hidden');
-                $('#login-form').removeClass('hidden');
-                $('#auth-message').text('').addClass('hidden'); 
-            });
-
-            $('#login-submit-button').on('click', async function() {
-                const email = $('#login-email').val();
-                const password = $('#login-password').val();
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                    $('#auth-message').text('Berhasil masuk!').removeClass('text-red-500').addClass('text-green-500').removeClass('hidden');
-                } catch (error) {
-                    let errorMessage = "Terjadi kesalahan saat masuk.";
-                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                        errorMessage = "Email atau kata sandi salah.";
-                    } else if (error.code === 'auth/invalid-email') {
-                        errorMessage = "Format email tidak valid.";
-                    } else {
-                        errorMessage = `Kesalahan: ${error.message}`;
+                if (user) {
+                    userId = user.uid;
+                    console.log("Firebase initialized and user signed in:", userId);
+                    // Now that user is authenticated, you can safely interact with Firestore
+                    // For this simple app, we don't strictly need Firestore persistence for chat
+                    // but if we did, this is where we'd start fetching/listening for data.
+                } else {
+                    try {
+                        if (__initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                    } catch (error) {
+                        console.error("Error signing in:", error);
+                        // Fallback to a random ID if anonymous sign-in also fails
+                        userId = crypto.randomUUID();
                     }
-                    $('#auth-message').text(errorMessage).removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
-                    console.error("Login error:", error);
+                    console.log("User ID:", userId);
+                    // You could potentially display the userId on the UI for multi-user scenarios
                 }
             });
 
-            $('#register-submit-button').on('click', async function() {
-                const email = $('#register-email').val();
-                const password = $('#register-password').val();
-                const confirmPassword = $('#register-confirm-password').val();
-                const defaultRole = $('input[name="register-role"]:checked').val();
-
-                if (!defaultRole) {
-                    $('#auth-message').text('Mohon pilih peran default Anda.').removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
-                    return;
-                }
-                if (password !== confirmPassword) {
-                    $('#auth-message').text('Kata sandi tidak cocok.').removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
-                    return;
-                }
-                if (password.length < 6) {
-                    $('#auth-message').text('Kata sandi minimal 6 karakter.').removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
-                    return;
-                }
-
-                try {
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    const user = userCredential.user;
-                    
-                    // Save default role to user's profile in Firestore
-                    await setDoc(doc(db, 'artifacts', __app_id, 'users', user.uid, 'profile', 'data'), {
-                        defaultRole: defaultRole,
-                        email: user.email,
-                        registeredAt: serverTimestamp()
-                    });
-
-                    $('#auth-message').text('Pendaftaran berhasil! Silakan masuk.').removeClass('text-red-500').addClass('text-green-500').removeClass('hidden');
-                    $('#register-form').addClass('hidden');
-                    $('#login-form').removeClass('hidden');
-                    // Clear registration form fields
-                    $('#register-email').val('');
-                    $('#register-password').val('');
-                    $('#register-confirm-password').val('');
-                    $('input[name="register-role"]').prop('checked', false);
-                    // Refresh userEmailMap after new user registration
-                    await fetchAllUserProfiles();
-                } catch (error) {
-                    let errorMessage = "Terjadi kesalahan saat pendaftaran.";
-                    if (error.code === 'auth/email-already-in-use') {
-                        errorMessage = "Email sudah terdaftar.";
-                    } else if (error.code === 'auth/invalid-email') {
-                        errorMessage = "Format email tidak valid.";
-                    } else if (error.code === 'auth/weak-password') {
-                        errorMessage = "Kata sandi terlalu lemah. Gunakan kombinasi huruf, angka, dan simbol.";
-                    } else if (error.code === 'auth/operation-not-allowed') {
-                        errorMessage = "Pendaftaran dengan Email/Kata Sandi tidak diizinkan. Mohon aktifkan di konsol Firebase Anda (Authentication -> Sign-in method -> Email/Password).";
-                        console.warn("Firebase Error: Email/Password sign-in is not enabled. Please enable it in your Firebase project settings (Authentication -> Sign-in method).");
-                    }
-                    $('#auth-message').text(errorMessage).removeClass('text-green-500').addClass('text-red-500').removeClass('hidden');
-                    console.error("Register error:", error);
-                }
+            // Role selection logic
+            $('.role-button').on('click', function() {
+                $('.role-button').removeClass('role-selected bg-blue-100').addClass('bg-white');
+                $(this).addClass('role-selected bg-blue-100');
+                selectedRole = $(this).data('role');
+                $('#selected-role-display').html(`Peran terpilih: <span class="font-semibold text-blue-600">${selectedRole}</span>`);
+                $('#submit-statement-button').prop('disabled', false); // Enable submit button once role is selected
+                $('#statement-input').prop('disabled', false); // Enable input field
             });
 
-            // Logout buttons (unified handling)
-            $('#logout-button-room-select, #logout-button-trial').on('click', async function() {
-                try {
-                    // updateUIBasedOnAuthAndRole will handle cleanup of listeners and UI on auth state change
-                    await signOut(auth); 
-                } catch (error) {
-                    console.error("Error during sign-out:", error);
-                    addMessageToChat("Sistem", `Kesalahan keluar: ${error.message}`, false);
-                }
-            });
+            // Disable submit button and input initially
+            $('#submit-statement-button').prop('disabled', true);
+            $('#statement-input').prop('disabled', true);
 
-            // Handle Leave Room button
-            $('#leave-room-button').on('click', async function() {
-                if (unsubscribeFromChat) { unsubscribeFromChat(); unsubscribeFromChat = null; }
-                if (unsubscribeFromSpeaker) { unsubscribeFromSpeaker(); unsubscribeFromSpeaker = null; }
-                if (unsubscribeFromRoomParticipants) { unsubscribeFromRoomParticipants(); unsubscribeFromRoomParticipants = null; } // Clear Hakim listener
-                currentRoomId = null;
-                chatHistory = [];
-                $('#chat-area').empty();
-                currentSpeaker = ''; // Reset speaker display
-                updateSpeakerDisplay();
-                updateUIBasedOnAuthAndRole(); // Transition back to room selection
-                addMessageToChat("Sistem", "Anda telah meninggalkan sidang.", false);
-            });
+            // Function to add message to chat area
+            function addMessageToChat(role, text, isUser = false) {
+                const messageHtml = `
+                    <div class="chat-bubble ${isUser ? 'user ml-auto' : 'system mr-auto'}">
+                        <p class="text-sm text-gray-800"><span class="font-semibold ${isUser ? 'text-green-700' : 'text-blue-700'}">${role}:</span> ${text}</p>
+                    </div>
+                `;
+                $('#chat-area').append(messageHtml);
+                // Scroll to the bottom of the chat area
+                $('#chat-area').scrollTop($('#chat-area')[0].scrollHeight);
+            }
 
-            // --- ROOM SELECTION EVENT HANDLERS ---
-            $('#create-room-button').on('click', function() {
-                if (!userId) {
-                    addMessageToChat("Sistem", "Anda harus masuk terlebih dahulu untuk membuat sidang.", false);
-                    return;
-                }
-                // Only allow creating room if user's default role is Penggugat
-                if (userDefaultRole !== "Penggugat") {
-                    addMessageToChat("Sistem", "Maaf, hanya pengguna dengan peran Penggugat yang dapat membuat sidang baru.", false);
-                    return;
-                }
-
-                $('#room-selection-section').addClass('hidden');
-                $('#create-scenario-section').removeClass('hidden');
-            });
-
-            $('#join-room-button').on('click', async function() {
-                if (!userId) {
-                    addMessageToChat("Sistem", "Anda harus masuk terlebih dahulu untuk bergabung sidang.", false);
-                    return;
-                }
-                const roomId = $('#join-room-id').val().trim();
-                if (roomId === '') {
-                    $('#join-room-id').addClass('border-red-500');
-                    setTimeout(() => { $('#join-room-id').removeClass('border-red-500'); }, 2000);
-                    addMessageToChat("Sistem", "Mohon masukkan ID sidang.", false);
-                    return;
-                }
-                await joinExistingRoom(roomId);
-            });
-
-            // --- SCENARIO CREATION EVENT HANDLER ---
-            $('#submit-new-scenario-button').on('click', async function() {
-                const scenario = $('#new-scenario-input').val().trim();
-                if (scenario === '') {
-                    $('#new-scenario-input').addClass('border-red-500');
-                    setTimeout(() => {
-                        $('#new-scenario-input').removeClass('border-red-500');
-                    }, 2000);
-                    addMessageToChat("Sistem", "Mohon masukkan skenario perkara sebelum membuat sidang.", false);
-                    return;
-                }
-                currentScenario = scenario;
-                await createNewRoom(scenario);
-            });
-
-            // --- TRIAL INTERFACE EVENT HANDLERS ---
-            // Role selection logic (now primarily for display and initial assignment in joined rooms)
-            $('.role-button').on('click', async function() {
-                if ($(this).prop('disabled')) { // If button is disabled, prevent action
-                    if (selectedRole) {
-                         addMessageToChat("Sistem", `Peran Anda sudah ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
-                    } else if (!userId) {
-                        addMessageToChat("Sistem", "Anda harus masuk terlebih dahulu.", false);
-                    } else if (!currentRoomId) {
-                        addMessageToChat("Sistem", "Anda harus berada di dalam sidang untuk memilih peran.", false);
-                    } else { // It means "Penggugat" button might be disabled because it's already taken
-                         addMessageToChat("Sistem", "Peran ini tidak tersedia atau sudah diambil.", false);
-                    }
-                    return;
-                }
-                
-                const newRole = $(this).data('role');
-
-                if (selectedRole) { // If a role is already chosen for this room (should be disabled but as a fallback)
-                    addMessageToChat("Sistem", `Peran Anda untuk sidang ini sudah ditetapkan sebagai ${selectedRole}. Anda tidak bisa mengubahnya.`, false);
-                    return;
-                }
-                
-                // Assign role for this specific room
-                try {
-                    const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userId, 'roomRoles', currentRoomId);
-                    await setDoc(userRoomRoleRef, { role: newRole });
-                    selectedRole = newRole; // Update local state
-                    // Also update the role in joinedRooms if it's already there
-                    const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', userId, 'joinedRooms', currentRoomId);
-                    await updateDoc(joinedRoomRef, { role: selectedRole, lastAccessed: serverTimestamp() });
-
-                    addMessageToChat("Sistem", `Peran Anda telah ditetapkan sebagai ${selectedRole} untuk sidang ini.`, false);
-                } catch (error) {
-                    console.error("Error setting role for room:", error);
-                    addMessageToChat("Sistem", `Gagal menetapkan peran: ${error.message}.`, false);
-                }
-                updateUIBasedOnAuthAndRole(); // Re-evaluate UI based on new role assignment
-            });
-
-            // Handle statement submission (main conversational flow)
+            // Handle statement submission
             $('#submit-statement-button').on('click', async function() {
                 if (!selectedRole) {
-                    addMessageToChat("Sistem", "Pilih peran Anda terlebih dahulu!", false);
-                    return;
-                }
-                if (selectedRole === "Panitera") {
-                    addMessageToChat("Sistem", "Sebagai Panitera, Anda tidak berpartisipasi langsung dalam argumen persidangan. Anda dapat menggunakan fitur 'Ringkas Persidangan' untuk melihat catatan.", false);
-                    $('#statement-input').val('');
+                    // Replace alert with a custom message box or visual feedback
+                    $('#statement-input').val(''); // Clear the input
+                    // Example of a simple visual feedback (for demo purposes)
+                    $('#selected-role-display').css('color', 'red').text('Pilih peran Anda terlebih dahulu!');
+                    setTimeout(() => {
+                        $('#selected-role-display').css('color', '').html(`Peran terpilih: <span class="font-semibold text-blue-600">Belum dipilih</span>`);
+                    }, 3000);
                     return;
                 }
 
                 const userStatement = $('#statement-input').val().trim();
                 if (userStatement === '') {
-                    $('#statement-input').addClass('border-red-500');
-                    setTimeout(() => { $('#statement-input').removeClass('border-red-500'); }, 2000);
+                    // Replace alert with a custom message box or visual feedback
+                    $('#statement-input').addClass('border-red-500'); // Highlight empty input
+                    setTimeout(() => {
+                        $('#statement-input').removeClass('border-red-500');
+                    }, 2000);
                     return;
                 }
 
-                if (selectedRole !== currentSpeaker) {
-                    addMessageToChat("Sistem", `Maaf, saat ini giliran <span class="font-bold text-red-600">${currentSpeaker}</span> berbicara. Silakan tunggu giliran Anda.`, false);
-                    $('#statement-input').val('');
-                    return;
+                addMessageToChat(selectedRole, userStatement, true);
+                chatHistory.push({ role: selectedRole, text: userStatement });
+                $('#statement-input').val(''); // Clear the input
+
+                $('#loading-spinner').show(); // Show loading spinner
+                $('#submit-statement-button').prop('disabled', true); // Disable button during API call
+
+                try {
+                    // Prepare chat history for LLM API call
+                    const formattedChatHistory = chatHistory.map(msg => ({
+                        role: msg.role === 'Hakim' ? 'model' : 'user', // Treat Hakim as model, others as user for simplicity
+                        parts: [{ text: `${msg.role}: ${msg.text}` }]
+                    }));
+
+                    // Add a system instruction or a specific prompt for the LLM
+                    const llmPrompt = `
+                        Anda adalah asisten AI yang mensimulasikan peradilan semu hukum acara perdata.
+                        Anda harus merespons sebagai 'Hakim', 'Penggugat', 'Tergugat', atau 'Saksi' berdasarkan konteks dan peran yang sedang berbicara, tetapi prioritas utama adalah menanggapi sebagai "Hakim" kecuali diminta secara spesifik oleh Penggugat/Tergugat/Saksi untuk merespons dari peran lain.
+                        Tujuan Anda adalah menjaga alur persidangan dan memberikan respons yang relevan dengan hukum acara perdata.
+                        Pertahankan respons Anda singkat, relevan, dan dalam bahasa Indonesia.
+                        Berikut adalah riwayat percakapan sejauh ini:
+                        ${formattedChatHistory.map(c => `${c.role}: ${c.parts[0].text}`).join('\n')}
+
+                        Berdasarkan pernyataan terakhir dari ${selectedRole}: "${userStatement}", bagaimana Anda akan melanjutkan persidangan atau merespons sebagai peran yang paling sesuai (prioritaskan Hakim)?
+                    `;
+
+
+                    const payload = {
+                        contents: [{ role: "user", parts: [{ text: llmPrompt }] }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            topK: 40,
+                            topP: 0.95,
+                            maxOutputTokens: 200
+                        }
+                    };
+
+                    const apiKey = "AIzaSyA4p9orSNKzkVFOa0IAGca1GNqSFCg11vo"; // Canvas will automatically provide this at runtime
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    let llmResponseText = "Maaf, saya tidak bisa memberikan respons saat ini.";
+                    let llmResponseRole = "Sistem";
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        llmResponseText = result.candidates[0].content.parts[0].text;
+
+                        // Simple logic to extract role from LLM response if it starts with a known role
+                        const roles = ["Hakim", "Penggugat", "Tergugat", "Saksi"];
+                        for (const role of roles) {
+                            if (llmResponseText.startsWith(`${role}:`)) {
+                                llmResponseRole = role;
+                                llmResponseText = llmResponseText.substring(`${role}:`.length).trim();
+                                break;
+                            }
+                        }
+                        // Default to Hakim if no specific role is found at the beginning
+                        if (llmResponseRole === "Sistem") {
+                            llmResponseRole = "Hakim";
+                        }
+
+                    } else {
+                        console.error("Unexpected LLM response structure:", result);
+                    }
+
+                    addMessageToChat(llmResponseRole, llmResponseText, false);
+                    chatHistory.push({ role: llmResponseRole, text: llmResponseText });
+
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    addMessageToChat("Sistem", "Terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.");
+                } finally {
+                    $('#loading-spinner').hide(); // Hide loading spinner
+                    $('#submit-statement-button').prop('disabled', false); // Re-enable button
                 }
-
-                // Add to Firestore and it will reflect in UI via snapshot listener
-                await addDoc(collection(db, 'artifacts', __app_id, 'rooms', currentRoomId, 'chatMessages'), { 
-                    role: selectedRole,
-                    text: userStatement,
-                    isUser: true,
-                    timestamp: serverTimestamp()
-                });
-                $('#statement-input').val(''); // Clear after sending
-
-                const formattedChatHistoryForLLM = chatHistory.map(msg => ({
-                    role: msg.role.startsWith('Hakim') ? 'model' : 'user',
-                    parts: [{ text: `${msg.role}: ${msg.text}` }]
-                }));
-
-                const llmPrompt = `
-                    Anda adalah asisten AI yang mensimulasikan peradilan semu hukum acara perdata.
-                    Skenario kasus saat ini adalah: "${currentScenario}"
-                    Anda harus merespons sebagai 'Hakim', 'Penggugat', 'Tergugat', atau 'Saksi' berdasarkan konteks dan peran yang sedang berbicara.
-                    Prioritas utama Anda adalah merespons sebagai "Hakim" dan selalu mengarahkan siapa yang harus berbicara selanjutnya.
-                    Setelah Anda memberikan respons sebagai Hakim, tentukan siapa yang harus berbicara selanjutnya (Penggugat, Tergugat, Saksi, atau Panitera jika ada peran aktif lainnya yang perlu dicatat, atau kembali ke Hakim jika tidak ada yang spesifik) dan sebutkan nama peran tersebut di awal kalimat respons Anda sebagai Hakim, misalnya: "Hakim (untuk Penggugat): Saudara Penggugat, silakan...", atau "Hakim (untuk Tergugat): Saudara Tergugat, ...". Jika Anda tidak menunjuk siapa pun, defaultkan menjadi 'Hakim'.
-                    Tujuan Anda adalah menjaga alur persidangan dan memberikan respons yang relevan dengan hukum acara perdata.
-                    Pertahankan respons Anda singkat, relevan, dan dalam bahasa Indonesia.
-                    Berikut adalah riwayat percakapan sejauh ini:
-                    ${formattedChatHistoryForLLM.map(c => `${c.role}: ${c.parts[0].text}`).join('\n')}
-
-                    Berdasarkan pernyataan terakhir dari ${selectedRole}: "${userStatement}", bagaimana Anda akan melanjutkan persidangan atau merespons sebagai peran yang paling sesuai (prioritaskan Hakim untuk mengarahkan)?
-                `;
-                
-                await callGeminiApi(llmPrompt, false);
-            });
-
-            // Handle Summarize button click
-            $('#summarize-button').on('click', async function() {
-                if (!selectedRole) {
-                    addMessageToChat("Sistem", "Pilih peran Anda terlebih dahulu untuk menggunakan fitur ini.", false);
-                    return;
-                }
-                if (!currentRoomId) {
-                    addMessageToChat("Sistem", "Anda harus berada di dalam sidang untuk menggunakan fitur ini.", false);
-                    return;
-                }
-
-                const chatContent = chatHistory.map(entry => `${entry.role}: ${entry.text}`).join('\n');
-                const summarizePrompt = `
-                    Skenario kasus saat ini adalah: "${currentScenario}"
-                    Ringkaslah poin-poin utama dan perkembangan sengketa perdata berikut secara singkat, padat, dan jelas. Fokus pada inti argumen dan pernyataan penting yang telah disampaikan.
-                    Riwayat persidangan:
-                    ${chatContent}
-                `;
-                
-                await callGeminiApi(summarizePrompt, true);
-            });
-
-            // Handle Suggest Questions button click
-            $('#suggest-questions-button').on('click', async function() {
-                if (!selectedRole) {
-                    addMessageToChat("Sistem", "Pilih peran Anda terlebih dahulu untuk menggunakan fitur ini.", false);
-                    return;
-                }
-                if (!currentRoomId) {
-                    addMessageToChat("Sistem", "Anda harus berada di dalam sidang untuk menggunakan fitur ini.", false);
-                    return;
-                }
-                // Panitera does not ask questions in the trial context, so disable this feature for them.
-                if (selectedRole === "Panitera") {
-                    addMessageToChat("Sistem", "Sebagai Panitera, Anda tidak mengajukan pertanyaan di persidangan. Fitur ini hanya untuk pihak yang berargumen.", false);
-                    return;
-                }
-
-                const lastFewMessages = chatHistory.slice(-5).map(entry => `${entry.role}: ${entry.text}`).join('\n');
-                const suggestPrompt = `
-                    Saya adalah ${selectedRole}. Skenario kasus saat ini adalah: "${currentScenario}"
-                    Berdasarkan percakapan terakhir ini:
-                    ${lastFewMessages}
-                    Tolong berikan 2-3 saran pertanyaan relevan yang bisa saya ajukan dalam persidangan ini, sesuai dengan peran saya dan konteks hukum acara perdata. Formatlah sebagai daftar.
-                `;
-
-                await callGeminiApi(suggestPrompt, true);
             });
         });
     </script>
