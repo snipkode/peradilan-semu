@@ -338,7 +338,14 @@
 
     <script type="module">
         // Global variables for Firebase configuration, initialized later
-        let firebaseConfig = {}; // This will be populated from window.__firebase_config
+        let firebaseConfig = {
+            apiKey: "AIzaSyBg17cVwN2RqFHfs5UW4p9hCAym8MRPMRk",
+            authDomain: "sample-firebase-ai-app-f7271.firebaseapp.com",
+            projectId: "sample-firebase-ai-app-f7271",
+            storageBucket: "sample-firebase-ai-app-f7271.firebasestorage.app",
+            messagingSenderId: "855997436295",
+            appId: "1:855997436295:web:c9dfdeeb1309b88bc30322"
+        }; // This will be populated from window.__firebase_config
         let __app_id = 'default-app-id'; // Fallback for __app_id from Canvas
         let __initial_auth_token = undefined; // Fallback for __initial_auth_token from Canvas
 
@@ -577,7 +584,7 @@
                     }
                 };
 
-                const apiKey = ""; // Canvas will automatically provide this at runtime
+                const apiKey = "AIzaSyA4p9orSNKzkVFOa0IAGca1GNqSFCg11vo"; // Canvas will automatically provide this at runtime
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
