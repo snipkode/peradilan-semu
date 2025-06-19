@@ -338,14 +338,7 @@
 
     <script type="module">
         // Global variables for Firebase configuration, initialized later
-        let firebaseConfig = {
-            apiKey: "AIzaSyBg17cVwN2RqFHfs5UW4p9hCAym8MRPMRk",
-            authDomain: "sample-firebase-ai-app-f7271.firebaseapp.com",
-            projectId: "sample-firebase-ai-app-f7271",
-            storageBucket: "sample-firebase-ai-app-f7271.firebasestorage.app",
-            messagingSenderId: "855997436295",
-            appId: "1:855997436295:web:c9dfdeeb1309b88bc30322"
-        }; // This will be populated from window.__firebase_config
+        let firebaseConfig = {}; // This will be populated from window.__firebase_config
         let __app_id = 'default-app-id'; // Fallback for __app_id from Canvas
         let __initial_auth_token = undefined; // Fallback for __initial_auth_token from Canvas
 
@@ -584,7 +577,7 @@
                     }
                 };
 
-                const apiKey = "AIzaSyA4p9orSNKzkVFOa0IAGca1GNqSFCg11vo"; // Canvas will automatically provide this at runtime
+                const apiKey = ""; // Canvas will automatically provide this at runtime
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
                 const response = await fetch(apiUrl, {
@@ -863,34 +856,22 @@
 
             // Listen to all user's roomRoles for this roomId to get participants
             const usersCollectionRef = collection(db, 'artifacts', __app_id, 'users');
-            const userProfilesPromises = [];
             const allRoles = ["Hakim", "Penggugat", "Tergugat", "Saksi", "Panitera"]; // Include Hakim for assignments
 
-            // Fetch all users' profiles to get their emails
-            const allUsersSnapshot = await getDocs(usersCollectionRef);
-            const userEmailMap = {};
-            allUsersSnapshot.forEach(userDoc => {
-                const profileData = userDoc.data().profile?.data;
-                if (profileData && profileData.email) {
-                    userEmailMap[userDoc.id] = profileData.email;
-                }
-            });
-
-
-            // Now, get room-specific roles for all users in this room
-            // We need to query the 'roomRoles' subcollection across ALL users for this specific room
-            // Firebase doesn't allow collection group queries for subcollections across specific parents easily
-            // So we'll have to iterate over all users and check their roomRoles subcollection for the currentRoomId.
-            
             const participantsInRoom = [];
-            for (const user of allUsersSnapshot.docs) {
-                const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', user.id, 'roomRoles', roomId);
+            // We need to fetch all users and then filter based on whether they have a role assigned in this room
+            // and get their emails from their profile documents.
+            const allUsersSnapshot = await getDocs(usersCollectionRef); // Get all users
+            
+            for (const userDoc of allUsersSnapshot.docs) {
+                const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', userDoc.id, 'roomRoles', roomId);
                 const userRoomRoleSnap = await getDoc(userRoomRoleRef);
+                const userProfileData = userDoc.data().profile?.data; // Get profile data for email
 
-                if (userRoomRoleSnap.exists()) {
+                if (userRoomRoleSnap.exists()) { // Only consider users who have a role assigned for this room
                     participantsInRoom.push({
-                        uid: user.id,
-                        email: userEmailMap[user.id] || "Email tidak diketahui",
+                        uid: userDoc.id,
+                        email: userProfileData?.email || "Email tidak diketahui",
                         assignedRole: userRoomRoleSnap.data().role || 'Belum ditetapkan'
                     });
                 }
@@ -898,29 +879,32 @@
 
 
             roomParticipantsListDiv.empty();
-            if (participantsInRoom.length === 0) {
+            // Filter out the Hakim who is currently logged in from the participants list
+            const otherParticipants = participantsInRoom.filter(p => p.uid !== userId);
+
+            if (otherParticipants.length === 0) {
                 roomParticipantsListDiv.html('<p class="text-gray-500 text-center text-sm">Belum ada peserta lain di sidang ini.</p>');
                 return;
             }
 
-            participantsInRoom.forEach(participant => {
-                // Don't show the Hakim themselves in the list for assignment
-                if (participant.uid === userId) return; 
-
+            otherParticipants.forEach(participant => {
                 let availableRolesForAssignment = allRoles.filter(role => {
-                    // Role is available if nobody has it OR if the current participant already has it
+                    // A role is available if:
+                    // 1. It's not currently assigned to ANYONE OR
+                    // 2. It IS currently assigned, but to THIS specific participant (meaning they can be re-assigned it)
                     return !roomAssignedRoles[role] || roomAssignedRoles[role] === participant.uid;
                 });
                 
-                // Special rules for Hakim and Penggugat roles
+                // Special rules for Hakim and Penggugat roles:
+                // If Hakim is already assigned to someone else, current Hakim cannot assign it to another
+                if (roomAssignedRoles["Hakim"] && roomAssignedRoles["Hakim"] !== userId && roomAssignedRoles["Hakim"] !== participant.uid) {
+                    availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Hakim");
+                }
+                
+                // If Penggugat is the room creator and it's someone else, that role is permanently unavailable for others
                 const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
                 getDoc(roomRef).then(roomSnap => {
-                    // If Hakim role is taken by someone else, it's not available for assignment
-                    if (roomAssignedRoles["Hakim"] && roomAssignedRoles["Hakim"] !== participant.uid) {
-                        availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Hakim");
-                    }
-                    // If Penggugat role is taken by room creator (and it's not this participant), it's not available
-                    if (roomSnap.exists() && roomSnap.data().createdBy === roomAssignedRoles["Penggugat"] && participant.uid !== roomSnap.data().createdBy) {
+                    if (roomSnap.exists() && roomSnap.data().createdBy === roomSnap.data().assignedRoles?.Penggugat && participant.uid !== roomSnap.data().createdBy) {
                          availableRolesForAssignment = availableRolesForAssignment.filter(role => role !== "Penggugat");
                     }
                     
@@ -937,34 +921,30 @@
                                         Tetapkan ${role}
                                     </button>
                                 `).join('')}
-                                ${participant.assignedRole !== 'Belum ditetapkan' && participant.assignedRole !== 'Hakim (AI)' && !roomAssignedRoles[participant.assignedRole] === participant.uid ? `
-                                <button class="unassign-role-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600"
-                                        data-target-uid="${participant.uid}" data-target-role="${participant.assignedRole}">
-                                        Batal ${participant.assignedRole}
-                                    </button>
-                                ` : ''}
+                                ${participant.assignedRole !== 'Belum ditetapkan' && roomAssignedRoles[participant.assignedRole] === participant.uid && participant.assignedRole !== 'Penggugat' && participant.assignedRole !== 'Hakim' ? `
+                                    <button class="unassign-role-btn bg-red-500 text-white px-2 py-1 rounded-md text-xs hover:bg-red-600"
+                                            data-target-uid="${participant.uid}" data-target-role="${participant.assignedRole}">
+                                            Batal ${participant.assignedRole}
+                                        </button>
+                                    ` : ''}
                             </div>
                         </div>
                     `;
                     roomParticipantsListDiv.append(participantHtml);
                 });
+            });
 
-                // Attach event handlers for assign/unassign buttons after rendering
-                $('.assign-role-btn').off('click').on('click', async function() {
-                    const targetUid = $(this).data('target-uid');
-                    const targetRole = $(this).data('target-role');
-                    await assignRoleToUser(targetUid, targetRole);
-                });
-                $('.unassign-role-btn').off('click').on('click', async function() {
-                    const targetUid = $(this).data('target-uid');
-                    const targetRole = $(this).data('target-role');
-                    await unassignRoleFromUser(targetUid, targetRole);
-                });
-
-
-            }, (error) => {
-                console.error("Error listening to room participants:", error);
-                roomParticipantsListDiv.html('<p class="text-red-500 text-center text-sm">Gagal memuat daftar peserta.</p>');
+            // Attach event handlers for assign/unassign buttons after rendering (off() to prevent duplicate handlers)
+            // Event delegation is generally better for dynamically added elements, but off() then on() works too.
+            $(document).off('click', '.assign-role-btn').on('click', '.assign-role-btn', async function() {
+                const targetUid = $(this).data('target-uid');
+                const targetRole = $(this).data('target-role');
+                await assignRoleToUser(targetUid, targetRole);
+            });
+            $(document).off('click', '.unassign-role-btn').on('click', '.unassign-role-btn', async function() {
+                const targetUid = $(this).data('target-uid');
+                const targetRole = $(this).data('target-role');
+                await unassignRoleFromUser(targetUid, targetRole);
             });
         }
 
@@ -982,19 +962,26 @@
             try {
                 let currentAssignedRoles = { ...roomAssignedRoles }; // Make a copy
 
-                // Check if the target role is already taken by someone else
-                if (currentAssignedRoles[targetRole] && currentAssignedRoles[targetRole] !== targetUid) {
-                    addMessageToChat("Sistem", `Peran ${targetRole} sudah diambil oleh ${currentAssignedRoles[targetRole].substring(0,4)}.... Silakan batalkan penetapan terlebih dahulu.`, false);
+                // Prevent assigning Penggugat if already taken by creator and not target user
+                const roomSnapForCreatorCheck = await getDoc(roomRef);
+                if (targetRole === "Penggugat" && roomSnapForCreatorCheck.exists() && roomSnapForCreatorCheck.data().createdBy !== targetUid && roomSnapForCreatorCheck.data().assignedRoles?.Penggugat) {
+                    addMessageToChat("Sistem", "Peran Penggugat hanya dapat ditetapkan kepada pembuat sidang.", false);
                     return;
                 }
 
-                // If target user already has a different role, remove that assignment first
+                // Check if the target role is already taken by someone else (not the target user)
+                if (currentAssignedRoles[targetRole] && currentAssignedRoles[targetRole] !== targetUid) {
+                    addMessageToChat("Sistem", `Peran ${targetRole} sudah diambil oleh ${userEmailMap[currentAssignedRoles[targetRole]] || currentAssignedRoles[targetRole].substring(0,4)}.... Silakan batalkan penetapan terlebih dahulu.`, false);
+                    return;
+                }
+
+                // If target user already has a different role, unassign the old one first
                 let oldRoleOfTargetUser = null;
                 for (const roleKey in currentAssignedRoles) {
                     if (currentAssignedRoles[roleKey] === targetUid) {
                         oldRoleOfTargetUser = roleKey;
                         delete currentAssignedRoles[roleKey];
-                        // Also update their userRoomRole in Firestore to null, will be set to new role next
+                        // Also remove their userRoomRole in Firestore for the old role
                         await deleteDoc(doc(db, 'artifacts', __app_id, 'users', targetUid, 'roomRoles', currentRoomId));
                         break;
                     }
@@ -1013,8 +1000,7 @@
                 await updateDoc(joinedRoomRef, { role: targetRole, lastAccessed: serverTimestamp() });
 
                 addMessageToChat("Sistem", `Hakim: Menetapkan ${userEmailMap[targetUid] || targetUid.substring(0,4)}... sebagai ${targetRole}.`, false);
-                updateUIBasedOnAuthAndRole(); // Re-evaluate UI for everyone
-
+                // updateUIBasedOnAuthAndRole() will be called by the room document snapshot listener
             } catch (error) {
                 console.error("Error assigning role:", error);
                 addMessageToChat("Sistem", `Gagal menetapkan peran: ${error.message}.`, false);
@@ -1027,7 +1013,20 @@
                 return;
             }
 
+            // Prevent unassigning Penggugat if the role is held by the room creator
             const roomRef = doc(db, 'artifacts', __app_id, 'rooms', currentRoomId);
+            const roomSnap = await getDoc(roomRef);
+            if (targetRole === "Penggugat" && roomSnap.exists() && roomSnap.data().createdBy === targetUid) {
+                addMessageToChat("Sistem", "Penggugat (pembuat sidang) tidak dapat dibatalkan perannya.", false);
+                return;
+            }
+            // Prevent unassigning Hakim from the AI or if it's the current user (Hakim)
+            if (targetRole === "Hakim" && targetUid === roomAssignedRoles["Hakim"]) {
+                addMessageToChat("Sistem", "Peran Hakim tidak dapat dibatalkan melalui antarmuka ini. Jika Anda ingin menyerahkan peran, tetapkan Hakim baru.", false);
+                return;
+            }
+
+
             const userRoomRoleRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'roomRoles', currentRoomId);
             const joinedRoomRef = doc(db, 'artifacts', __app_id, 'users', targetUid, 'joinedRooms', currentRoomId);
 
@@ -1046,8 +1045,7 @@
                 await updateDoc(joinedRoomRef, { role: null, lastAccessed: serverTimestamp() }); // Clear role in history
 
                 addMessageToChat("Sistem", `Hakim: Membatalkan penetapan ${targetRole} dari ${userEmailMap[targetUid] || targetUid.substring(0,4)}....`, false);
-                updateUIBasedOnAuthAndRole();
-
+                // updateUIBasedOnAuthAndRole() will be called by the room document snapshot listener
             } catch (error) {
                 console.error("Error unassigning role:", error);
                 addMessageToChat("Sistem", `Gagal membatalkan penetapan peran: ${error.message}.`, false);
@@ -1065,11 +1063,11 @@
                 unsubscribeFromSpeaker();
                 unsubscribeFromSpeaker = null;
             }
-            // Participants listener is managed directly in loadRoomParticipantsForHakim/updateUIBasedOnAuthAndRole
-            // if (unsubscribeFromRoomParticipants) { 
-            //     unsubscribeFromRoomParticipants();
-            //     unsubscribeFromRoomParticipants = null;
-            // }
+            // Unsubscribe existing room participants listener
+            if (unsubscribeFromRoomParticipants) { 
+                unsubscribeFromRoomParticipants();
+                unsubscribeFromRoomParticipants = null;
+            }
 
             // Listen to chat messages
             const chatCollectionRef = collection(db, 'artifacts', __app_id, 'rooms', roomId, 'chatMessages'); 
@@ -1094,7 +1092,7 @@
                 if (speakerDoc.exists() && speakerDoc.data().speaker) {
                     currentSpeaker = speakerDoc.data().speaker;
                     updateSpeakerDisplay();
-                    updateUIBasedOnAuthAndRole(); 
+                    // updateUIBasedOnAuthAndRole will be called by room document listener for overall UI refresh
                 } else {
                     currentSpeaker = 'Memuat...'; 
                     updateSpeakerDisplay();
@@ -1105,22 +1103,20 @@
             });
 
             // Listen to room document for assignedRoles changes (important for Hakim panel and all clients)
-            // This listener is crucial for Hakim panel updates
             const roomDocRef = doc(db, 'artifacts', __app_id, 'rooms', roomId);
-            if (unsubscribeFromRoomParticipants) {
-                unsubscribeFromRoomParticipants();
-            }
             unsubscribeFromRoomParticipants = onSnapshot(roomDocRef, (roomSnap) => {
                 if (roomSnap.exists()) {
+                    currentScenario = roomSnap.data().scenario || ''; // Update scenario if it somehow changes (not expected, but good practice)
+                    $('#current-scenario-display').text(currentScenario); // Ensure scenario display is synced
                     roomAssignedRoles = roomSnap.data().assignedRoles || {};
                     // If current user is Hakim, re-render Hakim panel to show updated assignments
-                    if (selectedRole === 'Hakim') { // Check current role *locally*
+                    if (selectedRole === 'Hakim') { 
                         loadRoomParticipantsForHakim(roomId); // Re-render the participant list
                     }
                     updateUIBasedOnAuthAndRole(); // Ensure everyone's role display and button states are correct
                 }
             }, (error) => {
-                console.error("Error listening to room document (assigned roles):", error);
+                console.error("Error listening to room document (assigned roles/scenario):", error);
             });
         }
 
@@ -1131,11 +1127,11 @@
         // Fetch all user profiles to build the email map
         async function fetchAllUserProfiles() {
             const usersCollectionRef = collection(db, 'artifacts', __app_id, 'users');
-            const q = query(usersCollectionRef); // Query the main users collection
+            const q = query(usersCollectionRef); 
 
             try {
                 const querySnapshot = await getDocs(q);
-                userEmailMap = {}; // Reset map
+                userEmailMap = {}; 
                 querySnapshot.forEach(userDoc => {
                     const profileData = userDoc.data().profile?.data;
                     if (profileData && profileData.email) {
